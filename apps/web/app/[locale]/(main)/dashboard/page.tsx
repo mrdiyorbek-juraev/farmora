@@ -1,4 +1,4 @@
-import { UserButton } from "@clerk/nextjs";
+import { UserButton } from "@repo/auth/client";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {

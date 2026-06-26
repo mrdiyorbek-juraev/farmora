@@ -1,9 +1,13 @@
-import { SignIn } from "@clerk/nextjs";
+import dynamic from "next/dynamic";
 
-export default function SignInPage() {
-  return (
-    <div className="flex min-h-screen items-center justify-center">
-      <SignIn />
-    </div>
-  );
-}
+const SignIn = dynamic(() =>
+  import("@repo/auth/components/sign-in").then((mod) => mod.SignIn)
+);
+
+const SignInPage = () => (
+  <div className="flex min-h-screen items-center justify-center">
+    <SignIn />
+  </div>
+);
+
+export default SignInPage;

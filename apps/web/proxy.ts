@@ -1,4 +1,4 @@
-import { clerkMiddleware } from "@clerk/nextjs/server";
+import { clerkMiddleware } from "@repo/auth/proxy";
 import { internationalizationMiddleware } from "@repo/internationalization/proxy";
 import { type NextRequest, NextResponse } from "next/server";
 

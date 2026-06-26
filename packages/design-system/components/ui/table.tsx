@@ -1,94 +1,107 @@
-"use client"
+"use client";
 
-import * as React from "react"
-
-import { cn } from "@repo/design-system/lib/utils"
+import { cn } from "@repo/design-system/lib/utils";
+import type * as React from "react";
 
 function Table({ className, ...props }: React.ComponentProps<"table">) {
   return (
-    <div
-      data-slot="table-container"
-      className="relative w-full overflow-x-auto"
-    >
+    <div className="relative w-full" data-slot="table-container">
       <table
-        data-slot="table"
         className={cn("w-full caption-bottom text-sm", className)}
+        data-slot="table"
         {...props}
       />
     </div>
-  )
+  );
 }
 
 function TableHeader({ className, ...props }: React.ComponentProps<"thead">) {
   return (
     <thead
+      // Header rows never hover-highlight (no row-level interaction in
+      // the head); consumers shouldn't have to add `hover:bg-transparent`
+      // to every <TableRow> they put in here.
+      className={cn("[&_tr]:border-b [&_tr]:hover:bg-transparent", className)}
       data-slot="table-header"
-      className={cn("[&_tr]:border-b", className)}
       {...props}
     />
-  )
+  );
 }
 
 function TableBody({ className, ...props }: React.ComponentProps<"tbody">) {
   return (
     <tbody
-      data-slot="table-body"
       className={cn("[&_tr:last-child]:border-0", className)}
+      data-slot="table-body"
       {...props}
     />
-  )
+  );
 }
 
 function TableFooter({ className, ...props }: React.ComponentProps<"tfoot">) {
   return (
     <tfoot
-      data-slot="table-footer"
       className={cn(
-        "bg-muted/50 border-t font-medium [&>tr]:last:border-b-0",
+        "border-t bg-muted/50 font-medium [&>tr]:last:border-b-0",
         className
       )}
+      data-slot="table-footer"
       {...props}
     />
-  )
+  );
 }
 
 function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
   return (
     <tr
-      data-slot="table-row"
       className={cn(
-        "hover:bg-muted/50 data-[state=selected]:bg-muted border-b transition-colors",
+        "border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted",
         className
       )}
+      data-slot="table-row"
       {...props}
     />
-  )
+  );
 }
 
 function TableHead({ className, ...props }: React.ComponentProps<"th">) {
   return (
     <th
-      data-slot="table-head"
+      // Header cell defaults: caption typography + muted color + a
+      // standard inline icon size for any nested <svg>, so consumers
+      // don't repeat `text-caption text-muted-foreground` and `size-3`
+      // on every header. The descendant selector (`_svg`) catches
+      // icons wrapped in a label <span>; icons inside interactive
+      // controls (Button, DropdownMenuTrigger…) carry their own size
+      // class which wins via specificity.
       className={cn(
-        "text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
+        "h-7 whitespace-nowrap px-2 text-left align-middle font-medium text-muted-foreground text-xs [&:has([role=checkbox])]:pr-0 [&_svg]:size-3 [&_svg]:text-muted-foreground",
         className
       )}
+      data-slot="table-head"
       {...props}
     />
-  )
+  );
 }
 
 function TableCell({ className, ...props }: React.ComponentProps<"td">) {
   return (
     <td
-      data-slot="table-cell"
+      // Body cell defaults: muted color, body type matches the header
+      // (`text-xs`) so a row reads as one continuous strip with no
+      // size jump between header and body, and a standard inline
+      // icon size for nested <svg>. Promoted text overrides with
+      // `text-foreground`/`font-medium`. Icons inside controls
+      // (Button, Tooltip…) keep their own sizing because those carry
+      // size classes that win on specificity.
       className={cn(
-        "p-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
+        "whitespace-nowrap p-2 align-middle text-muted-foreground text-xs [&:has([role=checkbox])]:pr-0 [&_svg]:size-3 [&_svg]:text-muted-foreground",
         className
       )}
+      data-slot="table-cell"
       {...props}
     />
-  )
+  );
 }
 
 function TableCaption({
@@ -97,20 +110,20 @@ function TableCaption({
 }: React.ComponentProps<"caption">) {
   return (
     <caption
+      className={cn("mt-4 text-muted-foreground text-sm", className)}
       data-slot="table-caption"
-      className={cn("text-muted-foreground mt-4 text-sm", className)}
       {...props}
     />
-  )
+  );
 }
 
 export {
   Table,
-  TableHeader,
   TableBody,
+  TableCaption,
+  TableCell,
   TableFooter,
   TableHead,
+  TableHeader,
   TableRow,
-  TableCell,
-  TableCaption,
-}
+};
