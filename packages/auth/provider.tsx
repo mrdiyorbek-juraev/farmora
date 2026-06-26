@@ -41,7 +41,7 @@ export const AuthProvider = ({
   }
 
   const isDark = resolvedTheme === "dark";
-  const baseTheme = isDark ? dark : undefined;
+  const theme = isDark ? dark : undefined;
 
   // TODO: re-enable custom variables once theme clashing is resolved
   const variables: Theme["variables"] = {
@@ -69,9 +69,7 @@ export const AuthProvider = ({
   // TODO: re-enable custom elements once theme clashing is resolved
   const elements: Theme["elements"] = {};
 
-  const sharedAppearance = { baseTheme, variables, elements };
-
-  const layout: Theme["layout"] = {
+  const options: Theme["layout"] = {
     socialButtonsPlacement: "bottom",
     socialButtonsVariant: "blockButton",
     privacyPageUrl: privacyUrl,
@@ -79,12 +77,13 @@ export const AuthProvider = ({
     helpPageUrl: helpUrl,
   };
 
+  const sharedAppearance = { theme, variables, elements, options };
+
   return (
     <ClerkProvider
       {...properties}
       appearance={{
         ...sharedAppearance,
-        layout,
         signIn: sharedAppearance,
         signUp: sharedAppearance,
         userProfile: sharedAppearance,
