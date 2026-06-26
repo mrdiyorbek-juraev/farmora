@@ -84,8 +84,9 @@ export const AuthProvider = ({
       {...properties}
       appearance={{
         ...sharedAppearance,
-        signIn: { ...sharedAppearance, layout },
-        signUp: { ...sharedAppearance, layout },
+        layout,
+        signIn: sharedAppearance,
+        signUp: sharedAppearance,
         userProfile: sharedAppearance,
         organizationProfile: sharedAppearance,
         createOrganization: sharedAppearance,
