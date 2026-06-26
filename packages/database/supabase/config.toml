@@ -1,0 +1,27 @@
+# Cattle Management — Supabase local config
+# Run from packages/database/: `pnpm dlx supabase init` to regenerate,
+# `pnpm db:start` to spin up local stack.
+
+project_id = "cattle-management"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+shadow_port = 54320
+major_version = 17
+
+[studio]
+enabled = true
+port = 54323
+
+[auth]
+enabled = false  # Clerk handles auth; Supabase auth disabled to avoid drift
+
+[storage]
+enabled = false

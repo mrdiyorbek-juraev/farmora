@@ -149,7 +149,7 @@ export function Sort<T = unknown>({
       {/* Width is driven by the inner content so the empty-state picker
           (w-64) and the populated sort list (w-md) each get the right
           footprint without the wrapper imposing a single value. */}
-      <PopoverContent align="end" className="w-fit p-0">
+      <PopoverContent align="start" className="w-fit p-0">
         {sorts.length === 0 ? (
           <SortFieldPicker
             excludeKeys={usedKeys}

@@ -1,5 +1,17 @@
 @import "@repo/design-system/styles/globals.css";
 
+/*
+ * The design system's globals.css ships with `@source "../**\/*.{ts,tsx}"`,
+ * which (relative to that file) only scans packages/design-system. Without
+ * an additional source path the Tailwind JIT never sees classes used in
+ * this app — e.g. `sm:grid-cols-2`, `lg:max-w-4xl`, custom `!`-marked
+ * utilities — and no CSS is generated for them.
+ *
+ * Path is relative to THIS stylesheet (apps/web/app/[locale]/styles.css),
+ * so `../../` resolves to apps/web/ — i.e. every TS/TSX file in the app.
+ */
+@source "../../**/*.{ts,tsx}";
+
 .shiki {
   color: var(--shiki-light);
   background-color: var(--shiki-light-bg);

@@ -1,9 +1,8 @@
 import { Providers } from "@/lib/providers";
-import "./styles.css";
-import { AuthProvider } from "@repo/auth/provider";
-import { DesignSystemProvider } from "@repo/design-system";
 import { Geist, Geist_Mono, Newsreader } from "next/font/google";
 import type { ReactNode } from "react";
+
+import "./styles.css";
 
 const geistSans = Geist({
   subsets: ["latin"],

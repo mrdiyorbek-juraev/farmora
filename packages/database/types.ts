@@ -1,8 +1,8 @@
 /**
- * Database types — mirror packages/database/supabase/schema.sql.
+ * Database types — mirror packages/database/supabase/migrations/.
  *
- * Once the project is connected to a Supabase instance, regenerate with:
- *   pnpm dlx supabase gen types typescript --project-id <id> > packages/database/types.ts
+ * Once connected to a Supabase instance, regenerate with:
+ *   pnpm --filter @repo/database db:types
  *
  * Until then this hand-written version keeps queries type-safe.
  */
@@ -24,6 +24,8 @@ export type BreedEnum =
 
 export type AcquisitionEnum = "born_on_farm" | "purchased";
 
+export type MembershipRoleEnum = "admin" | "member";
+
 export type Json =
   | string
   | number
@@ -35,40 +37,75 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      farmers: {
+      organizations: {
         Row: {
           id: string;
-          clerk_user_id: string;
-          email: string;
-          full_name: string | null;
-          farm_name: string | null;
+          clerk_org_id: string;
+          name: string;
           created_at: string;
           updated_at: string;
         };
         Insert: {
           id?: string;
-          clerk_user_id: string;
-          email: string;
-          full_name?: string | null;
-          farm_name?: string | null;
+          clerk_org_id: string;
+          name: string;
           created_at?: string;
           updated_at?: string;
         };
         Update: {
           id?: string;
-          clerk_user_id?: string;
-          email?: string;
-          full_name?: string | null;
-          farm_name?: string | null;
+          clerk_org_id?: string;
+          name?: string;
           created_at?: string;
           updated_at?: string;
         };
         Relationships: [];
       };
+      memberships: {
+        Row: {
+          id: string;
+          organization_id: string;
+          clerk_user_id: string;
+          email: string;
+          full_name: string | null;
+          role: MembershipRoleEnum;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          clerk_user_id: string;
+          email: string;
+          full_name?: string | null;
+          role?: MembershipRoleEnum;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          organization_id?: string;
+          clerk_user_id?: string;
+          email?: string;
+          full_name?: string | null;
+          role?: MembershipRoleEnum;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "memberships_organization_id_fkey";
+            columns: ["organization_id"];
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       cattle: {
         Row: {
           id: string;
-          farmer_id: string;
+          organization_id: string;
+          created_by_user_id: string;
           tag_number: string;
           name: string | null;
           breed: BreedEnum;
@@ -84,7 +121,8 @@ export type Database = {
         };
         Insert: {
           id?: string;
-          farmer_id: string;
+          organization_id: string;
+          created_by_user_id: string;
           tag_number: string;
           name?: string | null;
           breed: BreedEnum;
@@ -100,7 +138,8 @@ export type Database = {
         };
         Update: {
           id?: string;
-          farmer_id?: string;
+          organization_id?: string;
+          created_by_user_id?: string;
           tag_number?: string;
           name?: string | null;
           breed?: BreedEnum;
@@ -116,9 +155,9 @@ export type Database = {
         };
         Relationships: [
           {
-            foreignKeyName: "cattle_farmer_id_fkey";
-            columns: ["farmer_id"];
-            referencedRelation: "farmers";
+            foreignKeyName: "cattle_organization_id_fkey";
+            columns: ["organization_id"];
+            referencedRelation: "organizations";
             referencedColumns: ["id"];
           },
         ];
@@ -127,6 +166,7 @@ export type Database = {
         Row: {
           id: string;
           cattle_id: string;
+          changed_by_user_id: string | null;
           from_status: StatusEnum | null;
           to_status: StatusEnum;
           changed_at: string;
@@ -135,6 +175,7 @@ export type Database = {
         Insert: {
           id?: string;
           cattle_id: string;
+          changed_by_user_id?: string | null;
           from_status?: StatusEnum | null;
           to_status: StatusEnum;
           changed_at?: string;
@@ -143,6 +184,7 @@ export type Database = {
         Update: {
           id?: string;
           cattle_id?: string;
+          changed_by_user_id?: string | null;
           from_status?: StatusEnum | null;
           to_status?: StatusEnum;
           changed_at?: string;
@@ -165,18 +207,27 @@ export type Database = {
       gender_enum: GenderEnum;
       breed_enum: BreedEnum;
       acquisition_enum: AcquisitionEnum;
+      membership_role_enum: MembershipRoleEnum;
     };
     CompositeTypes: Record<string, never>;
   };
 };
 
-export type Farmer = Database["public"]["Tables"]["farmers"]["Row"];
+export type Organization =
+  Database["public"]["Tables"]["organizations"]["Row"];
+export type Membership = Database["public"]["Tables"]["memberships"]["Row"];
 export type Cattle = Database["public"]["Tables"]["cattle"]["Row"];
 export type StatusHistory =
   Database["public"]["Tables"]["status_history"]["Row"];
 
-export type FarmerInsert = Database["public"]["Tables"]["farmers"]["Insert"];
+export type OrganizationInsert =
+  Database["public"]["Tables"]["organizations"]["Insert"];
+export type MembershipInsert =
+  Database["public"]["Tables"]["memberships"]["Insert"];
 export type CattleInsert = Database["public"]["Tables"]["cattle"]["Insert"];
 
-export type FarmerUpdate = Database["public"]["Tables"]["farmers"]["Update"];
+export type OrganizationUpdate =
+  Database["public"]["Tables"]["organizations"]["Update"];
+export type MembershipUpdate =
+  Database["public"]["Tables"]["memberships"]["Update"];
 export type CattleUpdate = Database["public"]["Tables"]["cattle"]["Update"];
