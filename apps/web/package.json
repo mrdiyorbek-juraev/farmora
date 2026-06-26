@@ -43,7 +43,7 @@
     "next": "16.1.6",
     "nuqs": "^2.8.9",
     "react": "19.2.4",
-    "react-dom": "19.2.4",
+    "react-dom": "19.2.7",
     "react-hotkeys-hook": "^5.3.2",
     "recharts": "^3.9.0",
     "require-in-the-middle": "8.0.1",
