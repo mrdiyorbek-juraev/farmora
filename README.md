@@ -1,140 +1,132 @@
-# ▲ / next-forge
+# 🐄 Farmora — Cattle Management
 
-**Production-grade Turborepo template for Next.js apps.**
-
-<div>
-  <img src="https://img.shields.io/npm/dy/next-forge" alt="" />
-  <img src="https://img.shields.io/npm/v/next-forge" alt="" />
-  <img src="https://img.shields.io/github/license/vercel/next-forge" alt="" />
-</div>
+A farm-facing **cattle management** application for tracking herds, animal records, weights, status changes, and farm activity — built as a Next.js + Supabase + Clerk monorepo.
 
 ## Overview
 
-[next-forge](https://github.com/vercel/next-forge) is a production-grade [Turborepo](https://turborepo.com) template for [Next.js](https://nextjs.org/) apps. It's designed to be a comprehensive starting point for building SaaS applications, providing a solid, opinionated foundation with minimal configuration required.
+Farmora helps farms manage their livestock from a single dashboard: register animals, track breed/status/weight over time, record weigh-ins, and keep an audited activity log — all scoped per organization.
 
-Built on a decade of experience building web applications, next-forge balances speed and quality to help you ship thoroughly-built products faster.
+The repo is a [Turborepo](https://turborepo.com) monorepo. The product surface is the web app at `apps/web/`; `apps/docs/` and `apps/storybook/` are secondary.
 
-### Philosophy
+## Tech stack
 
-next-forge is built around five core principles:
+| Area | Choice |
+|------|--------|
+| Framework | [Next.js 16](https://nextjs.org) (App Router, Turbopack) |
+| UI | React 19.2, [Tailwind CSS v4](https://tailwindcss.com), shadcn/Radix design system |
+| Auth | [Clerk](https://clerk.com) — User → Organization → Membership |
+| Database | [Supabase](https://supabase.com) (Postgres) via the admin client |
+| Data layer | Server Actions + [React Query](https://tanstack.com/query) on the client |
+| Forms | [Formik](https://formik.org) + [Zod](https://zod.dev) |
+| Tooling | pnpm + Turborepo, [Ultracite](https://www.ultracite.ai/) (Biome) for lint/format |
+| Testing | [Vitest](https://vitest.dev) (unit), [Playwright](https://playwright.dev) (e2e) |
 
-- **Fast** — Quick to build, run, deploy, and iterate on
-- **Cheap** — Free to start with services that scale with you
-- **Opinionated** — Integrated tooling designed to work together
-- **Modern** — Latest stable features with healthy community support
-- **Safe** — End-to-end type safety and robust security posture
+## Architecture invariants
 
-## Demo
+These shape every file in the web app:
 
-Experience next-forge in action:
+- **Auth & scoping:** Clerk provides the `User → Organization → Membership` model. All data is **org-scoped at the query level** (`.eq("organization_id", …)`) — there is **no RLS**; the admin client bypasses it, so code-level scoping is the only tenant boundary.
+- **Server Actions are the only backend.** There are **no `app/api/*/route.ts` files**. Client mutations/queries go through `apps/web/app/_actions/<domain>.ts`, which validate input with a Zod schema, call `getCurrentOrganization()`, then delegate to server-only logic in `apps/web/lib/server/<domain>.ts`.
+- **Migrations** live in a single timestamped directory: `packages/database/supabase/migrations/`.
+- **Not wired up:** no Inngest, no Supabase Realtime, no message queue.
 
-- [Web](https://demo.next-forge.com) — Marketing website
-- [App](https://app.demo.next-forge.com) — Main application
-- [Storybook](https://storybook.demo.next-forge.com) — Component library
-- [API](https://api.demo.next-forge.com/health) — API health check
+## Repository structure
 
-## Features
+```
+apps/
+├── web/         ← Next.js 16 app — the product (port 3000)
+├── docs/        ← Mintlify documentation
+└── storybook/   ← Component showcase
 
-next-forge comes with batteries included:
+packages/
+├── ai/                    ← @repo/ai — OpenAI SDK + streaming
+├── auth/                  ← @repo/auth — Clerk wrapper
+├── database/              ← @repo/database — Supabase clients + migrations + types
+├── design-system/         ← @repo/design-system — shadcn/Radix UI + Tailwind v4
+├── internationalization/  ← @repo/internationalization
+├── next-config/           ← @repo/next-config — shared Next config
+├── rate-limit/            ← @repo/rate-limit — Upstash
+├── security/              ← @repo/security — Arcjet
+├── seo/                   ← @repo/seo
+├── storage/               ← @repo/storage — Vercel Blob
+└── typescript-config/     ← @repo/typescript-config
+```
 
-### Apps
+### Web app layout (`apps/web/`)
 
-- **Web** — Marketing site built with Tailwind CSS and TWBlocks
-- **App** — Main application with authentication and database integration
-- **API** — RESTful API with health checks and monitoring
-- **Docs** — Documentation site powered by Mintlify
-- **Email** — Email templates with React Email
-- **Storybook** — Component development environment
+```
+app/_actions/   ← Server actions ("use server") — the entire API surface
+lib/server/     ← Server-only DB/business logic (import "server-only")
+models/         ← Zod schemas + form converters (per domain)
+services/       ← Client-side React Query hooks (mutations, queries)
+stores/         ← Zustand stores (modals, global UI state)
+views/          ← Page-level UI compositions
+components/     ← Reusable UI building blocks
+```
 
-### Packages
+## Domain model
 
-- **Authentication** — Powered by [Clerk](https://clerk.com)
-- **Database** — Type-safe ORM with migrations
-- **Design System** — Comprehensive component library with dark mode
-- **Payments** — Subscription management via [Stripe](https://stripe.com)
-- **Email** — Transactional emails via [Resend](https://resend.com)
-- **Analytics** — Web ([Google Analytics](https://developers.google.com/analytics)) and product ([Posthog](https://posthog.com))
-- **Observability** — Error tracking ([Sentry](https://sentry.io)), logging, and uptime monitoring ([BetterStack](https://betterstack.com))
-- **Security** — Application security ([Arcjet](https://arcjet.com)), rate limiting, and secure headers
-- **CMS** — Type-safe content management for blogs and documentation
-- **SEO** — Metadata management, sitemaps, and JSON-LD
-- **AI** — AI integration utilities
-- **Webhooks** — Inbound and outbound webhook handling
-- **Collaboration** — Real-time features with avatars and live cursors
-- **Feature Flags** — Feature flag management
-- **Cron** — Scheduled job management
-- **Storage** — File upload and management
-- **Internationalization** — Multi-language support
-- **Notifications** — In-app notification system
+The Supabase schema (`packages/database/supabase/migrations/`) centers on two hubs — **organizations** (the tenant root) and **cattle**:
 
-## Getting Started
+- `organizations` — tenant root, mirrored from Clerk orgs
+- `memberships` — Clerk users mapped into an organization (`admin` / `member`)
+- `cattle` — animals: tag, breed, gender, status, weight, acquisition
+- `status_history` — audit trail of every status change per animal
+- `weight_measurements` — point-in-time weigh-ins driving the weight chart
+- `activities` — org-wide activity log (cattle created/updated, status changes, etc.)
+
+## Getting started
 
 ### Prerequisites
 
 - Node.js 20+
-- [Bun](https://bun.sh) (or npm/yarn/pnpm)
-- [Stripe CLI](https://docs.stripe.com/stripe-cli) for local webhook testing
+- pnpm 10+ (`packageManager` is pinned in `package.json`)
+- A Supabase project and a Clerk application
 
-### Installation
-
-Create a new next-forge project:
+### Install
 
 ```sh
-npx next-forge@latest init
+pnpm install
 ```
 
-### Setup
+### Environment
 
-1. Configure your environment variables
-2. Set up required service accounts (Clerk, Stripe, Resend, etc.)
-3. Run the development server
+Copy the example env and fill in Clerk + Supabase credentials:
 
-For detailed setup instructions, read the [documentation](https://www.next-forge.com/docs).
-
-## Structure
-
-next-forge uses a monorepo structure managed by Turborepo:
-
-```
-next-forge/
-├── apps/           # Deployable applications
-│   ├── web/        # Marketing website (port 3001)
-│   ├── app/        # Main application (port 3000)
-│   ├── api/        # API server
-│   ├── docs/       # Documentation
-│   ├── email/      # Email templates
-│   └── storybook/  # Component library
-└── packages/       # Shared packages
-    ├── design-system/
-    ├── database/
-    ├── auth/
-    └── ...
+```sh
+cp apps/web/.env.example apps/web/.env.local
 ```
 
-Each app is self-contained and independently deployable. Packages are shared across apps for consistency and maintainability.
+### Run the web app
 
-## Documentation
+```sh
+pnpm --filter web dev      # http://localhost:3000
+```
 
-Full documentation is available at [next-forge.com/docs](https://www.next-forge.com/docs), including:
+## Common commands
 
-- Detailed setup guides
-- Package documentation
-- Migration guides for swapping providers
-- Deployment instructions
-- Examples and recipes
+| Task | Command |
+|------|---------|
+| Web dev server | `pnpm --filter web dev` |
+| Web production build | `pnpm --filter web build` |
+| Build everything | `pnpm build` |
+| Format code | `pnpm dlx ultracite fix` |
+| Check lint/format | `pnpm dlx ultracite check` |
+| Unit tests | `pnpm --filter web test` |
+| E2E tests | `pnpm --filter web test:e2e` |
 
-## Contributing
+### Database
 
-We welcome contributions! See the [contributing guide](https://github.com/vercel/next-forge/blob/main/.github/CONTRIBUTING.md) for details.
+```sh
+# Create a new migration (correct timestamp prefix)
+cd packages/database && pnpm supabase migration new <snake_case_name>
 
-## Contributors
+# Apply migrations to a local Supabase
+pnpm --filter @repo/database db:reset
+```
 
-<a href="https://github.com/vercel/next-forge/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=vercel/next-forge" />
-</a>
+Conventions: lowercase enum values, `uuid_generate_v4()` from `uuid-ossp`, `organization_id` FK on every org-owned table, and **no RLS**.
 
-Made with [contrib.rocks](https://contrib.rocks).
+## Contributing conventions
 
-## License
-
-MIT
+Project-wide standards (type safety, async patterns, component/server-action rules) live in [`.claude/CLAUDE.md`](.claude/CLAUDE.md) and the rule files under `.claude/rules/`. Web-app specifics are in [`apps/web/.claude/CLAUDE.md`](apps/web/.claude/CLAUDE.md). Ultracite (Biome) enforces formatting and most linting automatically.
