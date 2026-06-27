@@ -1,17 +1,12 @@
 "use client";
 
-import {
-  type Filter,
-  Filters,
-} from "@repo/design-system/components/composed/filters";
-import {
-  Sort,
-  type SortRule,
-} from "@repo/design-system/components/composed/sort";
+import { Filters } from "@repo/design-system/components/composed/filters";
+import { Sort } from "@repo/design-system/components/composed/sort";
 import { ViewSettings } from "@repo/design-system/components/composed/view-settings";
-import type { ViewColumn } from "@repo/design-system/components/composed/view-settings";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Plus } from "lucide-react";
+
+import type { HerdToolbarProps } from "@/types/main/herd";
 
 const filterFields = [
   {
@@ -60,16 +55,6 @@ const sortFields = [
   { key: "date_of_birth", label: "Date of birth" },
   { key: "weight_kg", label: "Weight" },
 ];
-
-export type HerdToolbarProps = {
-  filters: Filter[];
-  onFiltersChange: (next: Filter[]) => void;
-  sorts: SortRule[];
-  onSortsChange: (next: SortRule[]) => void;
-  columns: ViewColumn[];
-  onColumnsChange: (next: ViewColumn[]) => void;
-  onAddNew: () => void;
-};
 
 export function HerdToolbar({
   filters,

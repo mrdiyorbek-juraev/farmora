@@ -10,12 +10,7 @@ import {
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { ChevronDown, MoreHorizontal, Trash2, X } from "lucide-react";
 
-export type HerdSelectionToolbarProps = {
-  count: number;
-  onRemove: () => void;
-  onClear: () => void;
-  disabled?: boolean;
-};
+import type { HerdSelectionToolbarProps } from "@/types/main/herd";
 
 export function HerdSelectionToolbar({
   count,

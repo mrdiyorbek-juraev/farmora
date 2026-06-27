@@ -9,8 +9,9 @@ import Link from "next/link";
 import { useMemo } from "react";
 
 import { type ColDef, DataTable } from "@/components/data-table";
-import type { CattleRow, ListCattleFilters, Status } from "@/models/cattle";
+import type { CattleRow, Status } from "@/models/cattle";
 import { useCattleList } from "@/services/cattle";
+import type { HerdTableProps } from "@/types/main/herd";
 
 const breedLabels: Record<string, string> = {
   holstein: "Holstein",
@@ -224,15 +225,6 @@ const allColumnDefs: Record<string, ColDef<CattleRow>> = {
     cellClass: "tabular-nums",
     valueFormatter: (params) => formatDate(params.value),
   },
-};
-
-export type HerdTableProps = {
-  filters?: Omit<ListCattleFilters, "limit" | "offset">;
-  columns: ViewColumn[];
-  onSelectionChange?: (rows: CattleRow[]) => void;
-  clearSelectionSignal?: number;
-  /** Called when the user clicks the "+" affordance on the Tag column. */
-  onAddNew?: () => void;
 };
 
 export function HerdTable({

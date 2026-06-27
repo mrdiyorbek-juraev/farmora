@@ -14,13 +14,9 @@ import { ArrowLeft, MoreHorizontal, Pencil, Trash2, Wheat } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-import type { CattleWithHistory } from "@/models/cattle";
 import { useCattleMutations } from "@/services/cattle/mutations";
 import { useGlobalModal } from "@/stores/shared/modal-store";
-
-export type AnimalHeaderProps = {
-  animal: CattleWithHistory;
-};
+import type { AnimalHeaderProps } from "@/types/main/herd-detail";
 
 export function AnimalHeader({ animal }: AnimalHeaderProps) {
   const title = animal.name ?? animal.tag_number;

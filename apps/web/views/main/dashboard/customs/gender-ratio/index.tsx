@@ -18,7 +18,7 @@ import {
 import { Venus } from "lucide-react";
 
 import type { Gender } from "@/models/cattle";
-import type { GenderCount } from "@/models/dashboard";
+import type { GenderRatioProps } from "@/types/main/dashboard";
 
 import { nivoTheme } from "../nivo-theme";
 
@@ -38,10 +38,6 @@ const percentFormatter = new Intl.NumberFormat(undefined, {
   style: "percent",
   maximumFractionDigits: 0,
 });
-
-export type GenderRatioProps = {
-  data: GenderCount[];
-};
 
 export function GenderRatio({ data }: GenderRatioProps) {
   const byGender = new Map(data.map((entry) => [entry.gender, entry.count]));

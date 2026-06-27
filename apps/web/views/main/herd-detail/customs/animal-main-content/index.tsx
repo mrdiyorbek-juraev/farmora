@@ -10,7 +10,8 @@ import {
 import { format, isValid, parseISO } from "date-fns";
 import { Activity, FileText, History, StickyNote } from "lucide-react";
 
-import type { CattleWithHistory, Status } from "@/models/cattle";
+import type { Status } from "@/models/cattle";
+import type { AnimalMainContentProps } from "@/types/main/herd-detail";
 
 import { ActivityLog } from "../activity-log";
 
@@ -43,10 +44,6 @@ function formatDateTime(value: string | null | undefined) {
   }
   return format(parsed, "MMM d, yyyy 'at' h:mm a");
 }
-
-export type AnimalMainContentProps = {
-  animal: CattleWithHistory;
-};
 
 export function AnimalMainContent({ animal }: AnimalMainContentProps) {
   return (

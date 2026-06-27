@@ -55,9 +55,6 @@ export function SiteHeader() {
         </BreadcrumbList>
       </Breadcrumb>
 
-      {/* Centered global search. The flanking flex-1 spacers keep the */}
-      {/* search pill horizontally centered regardless of how wide the */}
-      {/* breadcrumb on the left or the action cluster on the right grow. */}
       <div className="flex flex-1 justify-center px-2">
         <GlobalSearch />
       </div>

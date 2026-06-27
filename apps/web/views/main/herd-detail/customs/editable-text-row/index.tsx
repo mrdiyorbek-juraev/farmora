@@ -9,17 +9,7 @@ import {
 import { TruncatedText } from "@repo/design-system/components/composed/truncated-text";
 import { cn } from "@repo/design-system/lib/utils";
 
-export type EditableTextRowProps = {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-  placeholder?: string;
-  maxLength?: number;
-  /** Set true to surface the value as a monospace tabular number block. */
-  tabular?: boolean;
-  className?: string;
-  onSave: (next: string) => void | Promise<unknown>;
-};
+import type { EditableTextRowProps } from "@/types/main/herd-detail";
 
 export function EditableTextRow({
   icon,

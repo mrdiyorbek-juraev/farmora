@@ -29,6 +29,7 @@ import {
 import type { ActivityRow, ActivityType } from "@/models/activity";
 import type { Status } from "@/models/cattle";
 import { useCattleActivity } from "@/services/activity";
+import type { ActivityLogProps } from "@/types/main/herd-detail";
 
 const statusLabels: Record<Status, string> = {
   active: "Active",
@@ -135,10 +136,6 @@ function parseStatusMeta(
   }
   return { from, to };
 }
-
-export type ActivityLogProps = {
-  cattleId: string;
-};
 
 export function ActivityLog({ cattleId }: ActivityLogProps) {
   const { activity } = useCattleActivity(cattleId);

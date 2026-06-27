@@ -11,6 +11,8 @@ import { cn } from "@repo/design-system/lib/utils";
 import { format, isValid, parse } from "date-fns";
 import { useState } from "react";
 
+import type { EditableDateRowProps } from "@/types/main/herd-detail";
+
 const DATE_WIRE_FORMAT = "yyyy-MM-dd";
 
 function parseDateValue(value: string | null | undefined): Date | undefined {
@@ -20,18 +22,6 @@ function parseDateValue(value: string | null | undefined): Date | undefined {
   const parsed = parse(value, DATE_WIRE_FORMAT, new Date());
   return isValid(parsed) ? parsed : undefined;
 }
-
-export type EditableDateRowProps = {
-  icon: React.ReactNode;
-  label: string;
-  /** ISO date string `YYYY-MM-DD` or null/empty for "not set". */
-  value: string | null;
-  placeholder?: string;
-  disableFuture?: boolean;
-  /** When true, clicking the cell while a date is set offers a clear icon. */
-  clearable?: boolean;
-  onSave: (next: string | null) => void | Promise<unknown>;
-};
 
 export function EditableDateRow({
   icon,

@@ -17,7 +17,7 @@ import {
 import { Layers } from "lucide-react";
 
 import type { Breed } from "@/models/cattle";
-import type { BreedCount } from "@/models/dashboard";
+import type { BreedCompositionProps } from "@/types/main/dashboard";
 
 const breedLabels: Record<Breed, string> = {
   holstein: "Holstein",
@@ -46,10 +46,6 @@ const palette = [
 ];
 
 const numberFormatter = new Intl.NumberFormat();
-
-export type BreedCompositionProps = {
-  data: BreedCount[];
-};
 
 export function BreedComposition({ data }: BreedCompositionProps) {
   const sorted = [...data].sort((a, b) => b.count - a.count);

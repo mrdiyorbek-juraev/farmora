@@ -14,15 +14,10 @@ import { CalendarIcon } from "lucide-react";
 import { useState } from "react";
 import type { DateRange } from "react-day-picker";
 
-export type DashboardDateRange = {
-  from: Date;
-  to: Date;
-};
-
-export type DateRangePickerProps = {
-  value: DashboardDateRange;
-  onChange: (next: DashboardDateRange) => void;
-};
+import type {
+  DashboardDateRange,
+  DateRangePickerProps,
+} from "@/types/main/dashboard";
 
 type Preset = {
   label: string;

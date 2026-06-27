@@ -1,9 +1,5 @@
 import Image from "next/image";
-import type { ReactNode } from "react";
-
-interface AuthLayoutProps {
-  readonly children: ReactNode;
-}
+import type { AuthLayoutProps } from "@/types/auth";
 
 const AuthLayout = ({ children }: AuthLayoutProps) => (
   <div className="flex min-h-svh flex-col p-6 md:p-10">

@@ -10,7 +10,7 @@ import {
 import {
   Sortable,
   SortableContent,
-} from "@repo/design-system/components/dice-ui/sortable";
+} from "@repo/design-system/components/composed/sortable";
 import { cn } from "@repo/design-system/lib/utils";
 import { ArrowUpDown } from "lucide-react";
 import { useMemo, useState } from "react";

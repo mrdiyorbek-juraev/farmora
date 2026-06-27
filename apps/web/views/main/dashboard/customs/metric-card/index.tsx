@@ -11,25 +11,10 @@ import {
 import { cn } from "@repo/design-system/lib/utils";
 import { Minus, TrendingDown, TrendingUp } from "lucide-react";
 
-export type MetricCardDelta = {
-  /** Signed change versus the previous period. */
-  value: number;
-  /** Which direction is the good one — null means neutral (no colour). */
-  improvement: "up" | "down" | null;
-  /** Caption shown next to the change, e.g. "vs prev 90 days". */
-  caption?: string;
-};
-
-export type MetricCardProps = {
-  label: string;
-  value: number;
-  description?: string;
-  hint?: string;
-  icon: React.ReactNode;
-  tone?: "default" | "destructive";
-  isLoading?: boolean;
-  delta?: MetricCardDelta;
-};
+import type {
+  MetricCardDelta,
+  MetricCardProps,
+} from "@/types/main/dashboard";
 
 const numberFormatter = new Intl.NumberFormat();
 

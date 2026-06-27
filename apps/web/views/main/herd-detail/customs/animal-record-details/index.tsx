@@ -22,12 +22,12 @@ import { useCallback } from "react";
 import type {
   Acquisition,
   Breed,
-  CattleWithHistory,
   Gender,
   Status,
   UpdateCattleInput,
 } from "@/models/cattle";
 import { useCattleMutations } from "@/services/cattle/mutations";
+import type { AnimalRecordDetailsProps } from "@/types/main/herd-detail";
 
 import { EditableDateRow } from "../editable-date-row";
 import { EditableSelectRow } from "../editable-select-row";
@@ -88,10 +88,6 @@ function formatDateTime(value: string | null | undefined) {
   }
   return format(parsed, "MMM d, yyyy 'at' h:mm a");
 }
-
-export type AnimalRecordDetailsProps = {
-  animal: CattleWithHistory;
-};
 
 export function AnimalRecordDetails({ animal }: AnimalRecordDetailsProps) {
   const { onUpdate } = useCattleMutations();

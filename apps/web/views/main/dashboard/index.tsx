@@ -11,13 +11,13 @@ import type {
 } from "@/models/dashboard";
 import { useDashboardMetrics } from "@/services/dashboard";
 import { useGlobalModal } from "@/stores/shared/modal-store";
+import type { DashboardDateRange } from "@/types/main/dashboard";
 
 import { AnimalFormModal } from "../herd/modals/create-animal-modal";
 import { ActiveRateGauge } from "./customs/active-rate-gauge";
 import { AgeDistribution } from "./customs/age-distribution";
 import { BreedComposition } from "./customs/breed-composition";
 import { DashboardToolbar } from "./customs/dashboard-toolbar";
-import type { DashboardDateRange } from "./customs/date-range-picker";
 import { GenderRatio } from "./customs/gender-ratio";
 import { HerdLeaderboard } from "./customs/herd-leaderboard";
 import { MetricCard } from "./customs/metric-card";

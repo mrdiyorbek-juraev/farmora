@@ -3,7 +3,7 @@
 import {
   SortableItem,
   SortableItemHandle,
-} from "@repo/design-system/components/dice-ui/sortable";
+} from "@repo/design-system/components/composed/sortable";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,

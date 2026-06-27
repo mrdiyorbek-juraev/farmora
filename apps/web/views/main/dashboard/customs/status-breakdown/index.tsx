@@ -19,7 +19,7 @@ import {
 import { PieChart as PieIcon } from "lucide-react";
 
 import type { Status } from "@/models/cattle";
-import type { StatusCount } from "@/models/dashboard";
+import type { StatusBreakdownProps } from "@/types/main/dashboard";
 
 import { nivoTheme } from "../nivo-theme";
 
@@ -51,11 +51,6 @@ const percentFormatter = new Intl.NumberFormat(undefined, {
   style: "percent",
   maximumFractionDigits: 1,
 });
-
-export type StatusBreakdownProps = {
-  data: StatusCount[];
-  total: number;
-};
 
 export function StatusBreakdown({ data, total }: StatusBreakdownProps) {
   const byStatus = new Map(data.map((entry) => [entry.status, entry.count]));
