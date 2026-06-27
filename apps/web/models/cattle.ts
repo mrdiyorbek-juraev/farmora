@@ -121,6 +121,12 @@ export const deleteManyCattleInputSchema = z.object({
   ids: z.array(z.string().uuid()).min(1).max(200),
 });
 
+export const checkTagAvailableInputSchema = z.object({
+  tag_number: z.string().trim().min(1).max(64),
+  // Edit-mode caller passes its own cattle id so the lookup ignores self.
+  exclude_id: z.string().uuid().optional(),
+});
+
 // ─── Cattle create form ────────────────────────────────────────────
 //
 // The form mirrors CreateCattleInput, but every field starts as a string
@@ -258,3 +264,6 @@ export type CreateCattleInput = z.infer<typeof createCattleInputSchema>;
 export type UpdateCattleInput = z.infer<typeof updateCattleInputSchema>;
 export type DeleteCattleInput = z.infer<typeof deleteCattleInputSchema>;
 export type DeleteManyCattleInput = z.infer<typeof deleteManyCattleInputSchema>;
+export type CheckTagAvailableInput = z.input<
+  typeof checkTagAvailableInputSchema
+>;

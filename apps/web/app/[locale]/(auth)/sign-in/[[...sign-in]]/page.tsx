@@ -1,13 +1,5 @@
-import dynamic from "next/dynamic";
+import SignInView from "@/views/auth/sign-in";
 
-const SignIn = dynamic(() =>
-  import("@repo/auth/components/sign-in").then((mod) => mod.SignIn)
-);
-
-const SignInPage = () => (
-  <div className="flex min-h-screen items-center justify-center">
-    <SignIn />
-  </div>
-);
-
-export default SignInPage;
+export default function Page() {
+  return <SignInView />;
+}

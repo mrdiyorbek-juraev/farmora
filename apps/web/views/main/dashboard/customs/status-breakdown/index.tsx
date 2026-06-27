@@ -3,14 +3,15 @@
 import { Badge } from "@repo/design-system/components/ui/badge";
 import {
   Card,
+  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
 import {
-  ChartContainer,
   type ChartConfig,
+  ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
 } from "@repo/design-system/components/ui/chart";
@@ -35,9 +36,10 @@ const statusLabels: Record<Status, string> = {
   deceased: "Deceased",
 };
 
-// Re-use the chart palette tokens defined in the design-system
-// globals.css so the colours line up with the rest of the app.
+// shadcn chart config — drives both the per-bar fill (via `var(--color-X)`)
+// and the tooltip label lookups.
 const statusConfig: ChartConfig = {
+  count: { label: "Animals" },
   active: { label: "Active", color: "var(--chart-2)" },
   sick: { label: "Sick", color: "var(--destructive)" },
   pregnant: { label: "Pregnant", color: "var(--chart-9)" },
@@ -52,33 +54,38 @@ export type StatusBreakdownProps = {
 
 export function StatusBreakdown({ data, total }: StatusBreakdownProps) {
   const byStatus = new Map(data.map((entry) => [entry.status, entry.count]));
-  const chartData = statusOrder.map((status) => ({
-    status,
-    label: statusLabels[status],
-    count: byStatus.get(status) ?? 0,
-    fill: `var(--color-${status})`,
-  }));
+  // Only include statuses with at least one row — keeps the chart from
+  // showing five flat axis ticks when the herd is small.
+  const chartData = statusOrder
+    .map((status) => ({
+      status,
+      label: statusLabels[status],
+      count: byStatus.get(status) ?? 0,
+      fill: `var(--color-${status})`,
+    }))
+    .filter((row) => row.count > 0);
 
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between gap-2">
-          <div>
-            <CardTitle>Status breakdown</CardTitle>
-            <CardDescription>
-              Operational snapshot of every animal in the herd.
-            </CardDescription>
-          </div>
+        <CardTitle>Status breakdown</CardTitle>
+        <CardDescription>
+          Operational snapshot of every animal in the herd.
+        </CardDescription>
+        <CardAction>
           <Badge className="tabular-nums" variant="outline">
             {total} total
           </Badge>
-        </div>
+        </CardAction>
       </CardHeader>
       <CardContent>
-        {total === 0 ? (
+        {total === 0 || chartData.length === 0 ? (
           <EmptyState />
         ) : (
-          <ChartContainer className="h-56 w-full" config={statusConfig}>
+          <ChartContainer
+            className="aspect-auto h-56 w-full"
+            config={statusConfig}
+          >
             <BarChart accessibilityLayer data={chartData} layout="vertical">
               <XAxis hide type="number" />
               <YAxis
@@ -90,7 +97,14 @@ export function StatusBreakdown({ data, total }: StatusBreakdownProps) {
                 width={80}
               />
               <ChartTooltip
-                content={<ChartTooltipContent indicator="dot" />}
+                content={
+                  <ChartTooltipContent
+                    formatter={(value) => `${value} animals`}
+                    hideIndicator={false}
+                    indicator="dot"
+                  />
+                }
+                cursor={false}
               />
               <Bar dataKey="count" radius={4} />
             </BarChart>

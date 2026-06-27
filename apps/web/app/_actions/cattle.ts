@@ -4,12 +4,16 @@ import {
   createCattle,
   deleteCattle,
   deleteManyCattle,
+  generateCattleTag,
   getCattleById,
+  isCattleTagAvailable,
   listCattle,
   updateCattle,
 } from "@/lib/server/cattle";
 import { getCurrentOrganization } from "@/lib/server/organization";
 import {
+  type CheckTagAvailableInput,
+  checkTagAvailableInputSchema,
   type CreateCattleInput,
   createCattleInputSchema,
   type DeleteCattleInput,
@@ -57,4 +61,23 @@ export async function deleteManyCattleAction(rawInput: DeleteManyCattleInput) {
   const { ids } = deleteManyCattleInputSchema.parse(rawInput);
   const { organization } = await getCurrentOrganization();
   return deleteManyCattle(organization.id, ids);
+}
+
+export async function checkCattleTagAvailableAction(
+  rawInput: CheckTagAvailableInput
+) {
+  const input = checkTagAvailableInputSchema.parse(rawInput);
+  const { organization } = await getCurrentOrganization();
+  const available = await isCattleTagAvailable(
+    organization.id,
+    input.tag_number,
+    input.exclude_id
+  );
+  return { available };
+}
+
+export async function generateCattleTagAction() {
+  const { organization } = await getCurrentOrganization();
+  const tag = await generateCattleTag(organization.id);
+  return { tag };
 }

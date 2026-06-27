@@ -4,13 +4,6 @@ import type { CattleWithHistory } from "@/models/cattle";
 import { create, type StateCreator } from "zustand";
 
 // ─── Global Modal ────────────────────────────────────────────────────────────
-//
-// One store, many modals. Add a new entry per modal:
-//   <modalName>: { open: boolean; props: <PayloadType> | null }
-//
-// Toggle with `setModal({ <modalName>: { open: true, props: ... } })`.
-// `props: null` means create / blank; a populated `props` means edit.
-
 interface GlobalModal {
   animalForm: {
     open: boolean;
