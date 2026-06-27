@@ -12,6 +12,8 @@ import { Activity, FileText, History, StickyNote } from "lucide-react";
 
 import type { CattleWithHistory, Status } from "@/models/cattle";
 
+import { ActivityLog } from "../activity-log";
+
 const statusLabels: Record<Status, string> = {
   active: "Active",
   sick: "Sick",
@@ -48,7 +50,7 @@ export type AnimalMainContentProps = {
 
 export function AnimalMainContent({ animal }: AnimalMainContentProps) {
   return (
-    <Tabs className="flex h-full flex-col" defaultValue="history">
+    <Tabs className="flex h-full flex-col" defaultValue="activity">
       <TabsList className="self-start">
         <TabsTrigger value="activity">
           <Activity />
@@ -69,10 +71,7 @@ export function AnimalMainContent({ animal }: AnimalMainContentProps) {
       </TabsList>
 
       <TabsContent className="mt-4 flex-1" value="activity">
-        <EmptyState
-          description="Future home for vaccinations, weigh-ins, treatments, and other timestamped events."
-          title="No activity yet"
-        />
+        <ActivityLog cattleId={animal.id} />
       </TabsContent>
 
       <TabsContent className="mt-4 flex-1" value="history">

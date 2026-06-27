@@ -6,7 +6,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
-import { Skeleton } from "@repo/design-system/components/ui/skeleton";
 
 import { useCattleDetail } from "@/services/cattle";
 import { AnimalFormModal } from "@/views/main/herd/modals/create-animal-modal";
@@ -15,21 +14,13 @@ import { AnimalHeader } from "./customs/animal-header";
 import { AnimalMainContent } from "./customs/animal-main-content";
 import { AnimalRecordDetails } from "./customs/animal-record-details";
 import { AnimalSubHeader } from "./customs/animal-sub-header";
+import { HerdDetailSkeleton } from "./customs/herd-detail-skeleton";
 
 export function HerdDetailView({ id }: { id: string }) {
   const { cattle } = useCattleDetail(id);
 
   if (cattle.isPending) {
-    return (
-      <div className="flex flex-1 flex-col">
-        <Skeleton className="h-16 w-full rounded-none" />
-        <Skeleton className="h-10 w-full rounded-none" />
-        <div className="grid flex-1 grid-cols-1 lg:grid-cols-[1fr_360px]">
-          <Skeleton className="m-4 h-96" />
-          <Skeleton className="m-4 h-96" />
-        </div>
-      </div>
-    );
+    return <HerdDetailSkeleton />;
   }
 
   if (cattle.isError || !cattle.data) {

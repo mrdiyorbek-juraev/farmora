@@ -280,3 +280,4 @@ packages/database/generated
 
 # Internal design docs (not for VCS)
 system-design-doc/
+.env*

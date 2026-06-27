@@ -1,9 +1,12 @@
 "use server";
 
-import { getDashboardMetrics } from "@/lib/server/dashboard";
+import {
+  type DashboardMetricsRange,
+  getDashboardMetrics,
+} from "@/lib/server/dashboard";
 import { getCurrentOrganization } from "@/lib/server/organization";
 
-export async function getDashboardMetricsAction() {
+export async function getDashboardMetricsAction(range?: DashboardMetricsRange) {
   const { organization } = await getCurrentOrganization();
-  return getDashboardMetrics(organization.id);
+  return getDashboardMetrics(organization.id, range);
 }

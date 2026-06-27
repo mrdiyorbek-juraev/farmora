@@ -1,5 +1,6 @@
 "use client";
 
+import { ResponsiveBar } from "@nivo/bar";
 import {
   Card,
   CardContent,
@@ -8,12 +9,13 @@ import {
   CardTitle,
 } from "@repo/design-system/components/ui/card";
 import {
-  ChartContainer,
-  type ChartConfig,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@repo/design-system/components/ui/chart";
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@repo/design-system/components/ui/empty";
+import { CakeSlice } from "lucide-react";
 
 import {
   type AgeBucket,
@@ -21,10 +23,15 @@ import {
   ageBucketLabels,
 } from "@/models/dashboard";
 
+import { nivoTheme } from "../nivo-theme";
+
 const bucketOrder: AgeBucket[] = ["calf", "young", "adult", "mature"];
 
-const ageConfig: ChartConfig = {
-  count: { label: "Animals", color: "var(--chart-3)" },
+const bucketHint: Record<AgeBucket, string> = {
+  calf: "< 6 mo",
+  young: "6 mo – 1 yr",
+  adult: "1 – 5 yr",
+  mature: "5+ yr",
 };
 
 export type AgeDistributionProps = {
@@ -36,12 +43,13 @@ export function AgeDistribution({ data }: AgeDistributionProps) {
   const chartData = bucketOrder.map((bucket) => ({
     bucket,
     label: ageBucketLabels[bucket],
+    hint: bucketHint[bucket],
     count: byBucket.get(bucket) ?? 0,
   }));
   const total = chartData.reduce((sum, entry) => sum + entry.count, 0);
 
   return (
-    <Card>
+    <Card className="h-full">
       <CardHeader>
         <CardTitle>Age distribution</CardTitle>
         <CardDescription>Breeding &amp; culling planning.</CardDescription>
@@ -50,35 +58,50 @@ export function AgeDistribution({ data }: AgeDistributionProps) {
         {total === 0 ? (
           <EmptyState />
         ) : (
-          <ChartContainer className="h-48 w-full" config={ageConfig}>
-            <BarChart accessibilityLayer data={chartData}>
-              <CartesianGrid
-                stroke="var(--border)"
-                strokeDasharray="3 3"
-                vertical={false}
-              />
-              <XAxis
-                axisLine={false}
-                dataKey="label"
-                tick={{ fontSize: 12, fill: "var(--muted-foreground)" }}
-                tickLine={false}
-              />
-              <YAxis
-                axisLine={false}
-                tick={{ fontSize: 12, fill: "var(--muted-foreground)" }}
-                tickLine={false}
-                width={28}
-              />
-              <ChartTooltip
-                content={<ChartTooltipContent indicator="dot" />}
-              />
-              <Bar
-                dataKey="count"
-                fill="var(--color-count)"
-                radius={[4, 4, 0, 0]}
-              />
-            </BarChart>
-          </ChartContainer>
+          <div className="h-56 w-full">
+            <ResponsiveBar
+              animate
+              axisBottom={{
+                tickPadding: 6,
+                tickSize: 0,
+              }}
+              axisLeft={{
+                tickPadding: 6,
+                tickSize: 0,
+                tickValues: 4,
+              }}
+              borderRadius={4}
+              colors={["var(--chart-3)"]}
+              data={chartData}
+              enableGridX={false}
+              enableGridY
+              enableLabel={false}
+              indexBy="label"
+              keys={["count"]}
+              labelSkipHeight={16}
+              labelTextColor="var(--foreground)"
+              margin={{ top: 16, right: 8, bottom: 28, left: 36 }}
+              padding={0.4}
+              theme={nivoTheme}
+              tooltip={({ indexValue, value, data: datum }) => (
+                <div className="flex items-center gap-2 whitespace-nowrap rounded-md border bg-popover px-2.5 py-1.5 text-popover-foreground text-xs shadow-md">
+                  <span
+                    aria-hidden
+                    className="size-2 shrink-0 rounded-full"
+                    style={{ backgroundColor: "var(--chart-3)" }}
+                  />
+                  <span className="font-medium">{indexValue}</span>
+                  <span className="text-muted-foreground">
+                    {(datum as { hint: string }).hint}
+                  </span>
+                  <span className="ml-1 font-medium tabular-nums">
+                    {value} animals
+                  </span>
+                </div>
+              )}
+              valueFormat={(v) => `${v}`}
+            />
+          </div>
         )}
       </CardContent>
     </Card>
@@ -87,11 +110,16 @@ export function AgeDistribution({ data }: AgeDistributionProps) {
 
 function EmptyState() {
   return (
-    <div className="flex h-40 flex-col items-center justify-center gap-1 rounded-md border border-border border-dashed p-6 text-center">
-      <p className="font-medium text-sm">No DOB recorded yet</p>
-      <p className="text-muted-foreground text-sm">
-        Add birth dates to see your age cohorts.
-      </p>
-    </div>
+    <Empty className="h-56 border">
+      <EmptyHeader>
+        <EmptyMedia variant="icon">
+          <CakeSlice />
+        </EmptyMedia>
+        <EmptyTitle>No DOB recorded yet</EmptyTitle>
+        <EmptyDescription>
+          Add birth dates to see your age cohorts.
+        </EmptyDescription>
+      </EmptyHeader>
+    </Empty>
   );
 }

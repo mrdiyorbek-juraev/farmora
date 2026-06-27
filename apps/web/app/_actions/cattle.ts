@@ -49,12 +49,12 @@ export async function updateCattleAction(rawInput: UpdateCattleInput) {
 
 export async function deleteCattleAction(rawInput: DeleteCattleInput) {
   const { id } = deleteCattleInputSchema.parse(rawInput);
-  const { organization } = await getCurrentOrganization();
-  return deleteCattle(organization.id, id);
+  const { organization, userId } = await getCurrentOrganization();
+  return deleteCattle(organization.id, userId, id);
 }
 
 export async function deleteManyCattleAction(rawInput: DeleteManyCattleInput) {
   const { ids } = deleteManyCattleInputSchema.parse(rawInput);
-  const { organization } = await getCurrentOrganization();
-  return deleteManyCattle(organization.id, ids);
+  const { organization, userId } = await getCurrentOrganization();
+  return deleteManyCattle(organization.id, userId, ids);
 }

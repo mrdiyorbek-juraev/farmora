@@ -1,5 +1,6 @@
 "use client";
 
+import { ResponsivePie } from "@nivo/pie";
 import {
   Card,
   CardContent,
@@ -8,17 +9,18 @@ import {
   CardTitle,
 } from "@repo/design-system/components/ui/card";
 import {
-  ChartContainer,
-  type ChartConfig,
-  ChartLegend,
-  ChartLegendContent,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@repo/design-system/components/ui/chart";
-import { Cell, Pie, PieChart } from "recharts";
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@repo/design-system/components/ui/empty";
+import { Venus } from "lucide-react";
 
 import type { Gender } from "@/models/cattle";
 import type { GenderCount } from "@/models/dashboard";
+
+import { nivoTheme } from "../nivo-theme";
 
 const genderOrder: Gender[] = ["female", "male"];
 
@@ -27,10 +29,15 @@ const genderLabels: Record<Gender, string> = {
   male: "Male",
 };
 
-const genderConfig: ChartConfig = {
-  female: { label: "Female", color: "var(--chart-9)" },
-  male: { label: "Male", color: "var(--chart-2)" },
+const genderColor: Record<Gender, string> = {
+  female: "var(--chart-9)",
+  male: "var(--chart-8)",
 };
+
+const percentFormatter = new Intl.NumberFormat(undefined, {
+  style: "percent",
+  maximumFractionDigits: 0,
+});
 
 export type GenderRatioProps = {
   data: GenderCount[];
@@ -40,51 +47,82 @@ export function GenderRatio({ data }: GenderRatioProps) {
   const byGender = new Map(data.map((entry) => [entry.gender, entry.count]));
   const chartData = genderOrder
     .map((gender) => ({
-      gender,
+      id: gender,
       label: genderLabels[gender],
-      count: byGender.get(gender) ?? 0,
-      fill: `var(--color-${gender})`,
+      value: byGender.get(gender) ?? 0,
+      color: genderColor[gender],
     }))
-    .filter((entry) => entry.count > 0);
+    .filter((entry) => entry.value > 0);
 
-  const total = chartData.reduce((sum, entry) => sum + entry.count, 0);
+  const total = chartData.reduce((sum, entry) => sum + entry.value, 0);
 
   return (
-    <Card>
+    <Card className="h-full">
       <CardHeader>
         <CardTitle>Gender ratio</CardTitle>
         <CardDescription>Herd balance &amp; breeding needs.</CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex flex-col items-center gap-4">
         {total === 0 ? (
           <EmptyState />
         ) : (
-          <ChartContainer
-            className="mx-auto aspect-square h-48"
-            config={genderConfig}
-          >
-            <PieChart>
-              <ChartTooltip
-                content={<ChartTooltipContent indicator="dot" hideLabel />}
-              />
-              <Pie
+          <>
+            <div className="relative mx-auto h-44 w-44">
+              <ResponsivePie
+                activeOuterRadiusOffset={4}
+                borderWidth={0}
+                colors={{ datum: "data.color" }}
+                cornerRadius={2}
                 data={chartData}
-                dataKey="count"
-                innerRadius={40}
-                nameKey="label"
-                paddingAngle={2}
-                strokeWidth={0}
-              >
-                {chartData.map((entry) => (
-                  <Cell fill={entry.fill} key={entry.gender} />
-                ))}
-              </Pie>
-              <ChartLegend
-                content={<ChartLegendContent nameKey="label" />}
-                verticalAlign="bottom"
+                enableArcLabels={false}
+                enableArcLinkLabels={false}
+                innerRadius={0.65}
+                margin={{ top: 4, right: 4, bottom: 4, left: 4 }}
+                padAngle={1}
+                theme={nivoTheme}
+                tooltip={({ datum }) => (
+                  <div className="flex items-center gap-2 whitespace-nowrap rounded-md border bg-popover px-2.5 py-1.5 text-popover-foreground text-xs shadow-md">
+                    <span
+                      aria-hidden
+                      className="size-2 shrink-0 rounded-full"
+                      style={{ backgroundColor: datum.color }}
+                    />
+                    <span className="font-medium">{datum.label}</span>
+                    <span className="ml-1 tabular-nums">{datum.value}</span>
+                  </div>
+                )}
               />
-            </PieChart>
-          </ChartContainer>
+              <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+                <span className="font-semibold text-foreground text-xl">
+                  {total}
+                </span>
+                <span className="text-muted-foreground text-xs">animals</span>
+              </div>
+            </div>
+            <ul className="flex w-full flex-col gap-1 text-sm">
+              {chartData.map((entry) => (
+                <li
+                  className="flex items-center justify-between"
+                  key={entry.id}
+                >
+                  <span className="flex items-center gap-2">
+                    <span
+                      aria-hidden
+                      className="size-2 rounded-full"
+                      style={{ backgroundColor: entry.color }}
+                    />
+                    <span className="font-medium">{entry.label}</span>
+                  </span>
+                  <span className="text-muted-foreground tabular-nums">
+                    {entry.value}{" "}
+                    <span className="text-xs">
+                      ({percentFormatter.format(entry.value / total)})
+                    </span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </>
         )}
       </CardContent>
     </Card>
@@ -93,11 +131,14 @@ export function GenderRatio({ data }: GenderRatioProps) {
 
 function EmptyState() {
   return (
-    <div className="flex h-40 flex-col items-center justify-center gap-1 rounded-md border border-border border-dashed p-6 text-center">
-      <p className="font-medium text-sm">No animals yet</p>
-      <p className="text-muted-foreground text-sm">
-        Add an animal to see the ratio.
-      </p>
-    </div>
+    <Empty className="h-56 border">
+      <EmptyHeader>
+        <EmptyMedia variant="icon">
+          <Venus />
+        </EmptyMedia>
+        <EmptyTitle>No animals yet</EmptyTitle>
+        <EmptyDescription>Add an animal to see the ratio.</EmptyDescription>
+      </EmptyHeader>
+    </Empty>
   );
 }

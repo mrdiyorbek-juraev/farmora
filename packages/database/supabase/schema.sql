@@ -32,6 +32,14 @@ do $$ begin
   create type membership_role_enum as enum ('admin', 'member');
 exception when duplicate_object then null; end $$;
 
+do $$ begin
+  create type activity_type_enum as enum (
+    'cattle_created', 'cattle_updated', 'cattle_deleted', 'status_changed',
+    'weight_recorded', 'note_added', 'member_added', 'member_removed',
+    'organization_updated'
+  );
+exception when duplicate_object then null; end $$;
+
 create table if not exists organizations (
   id            uuid primary key default uuid_generate_v4(),
   clerk_org_id  text unique not null,
@@ -79,4 +87,16 @@ create table if not exists status_history (
   to_status            status_enum not null,
   changed_at           timestamptz not null default now(),
   note                 text
+);
+
+create table if not exists activities (
+  id               uuid primary key default uuid_generate_v4(),
+  organization_id  uuid not null references organizations(id) on delete cascade,
+  actor_user_id    text,
+  cattle_id        uuid references cattle(id) on delete set null,
+  type             activity_type_enum not null,
+  title            text not null,
+  description      text,
+  metadata         jsonb not null default '{}'::jsonb,
+  created_at       timestamptz not null default now()
 );
