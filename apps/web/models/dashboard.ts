@@ -1,5 +1,11 @@
-import { differenceInMonths, parseISO } from "date-fns";
-import type { Acquisition, Breed, CattleRow, Gender, Status } from "./cattle";
+import {
+  differenceInCalendarDays,
+  differenceInMonths,
+  format,
+  parseISO,
+  subDays,
+} from "date-fns";
+import type { Acquisition, Breed, Gender, Status } from "./cattle";
 
 export type AgeBucket = "calf" | "young" | "adult" | "mature";
 
@@ -15,7 +21,7 @@ export const ageBucketLabels: Record<AgeBucket, string> = {
 //   Young  6 mo – 1 yr
 //   Adult  1 – 5 yr
 //   Mature 5+ yr
-export function bucketForAgeMonths(months: number): AgeBucket {
+function bucketForAgeMonths(months: number): AgeBucket {
   if (months < 6) {
     return "calf";
   }
@@ -61,81 +67,62 @@ export type BreedCount = { breed: Breed; count: number };
 export type GenderCount = { gender: Gender; count: number };
 export type AcquisitionCount = { acquisition: Acquisition; count: number };
 export type AgeBucketCount = { bucket: AgeBucket; count: number };
+export type BreedAgeCount = { breed: Breed; bucket: AgeBucket; count: number };
 
-// Lean row for the "Recent additions" widget. Picks only the columns the
-// table renders so the dashboard payload stays small. Age is derived
-// client-side from `date_of_birth` so the BE doesn't have to recompute on
-// every request — the row's own `created_at` ordering is what matters.
-export type RecentAdditionItem = Pick<
-  CattleRow,
-  "id" | "tag_number" | "name" | "breed" | "status" | "date_of_birth" | "created_at"
->;
-
-// Half-open window: `from` inclusive, `to` exclusive. Both ISO date
-// strings (YYYY-MM-DD). The dashboard header drives this via preset
-// chips — Last 7 days, This month, etc.
-export type DashboardDateRange = {
-  from: string;
-  to: string;
+export type DashboardMetricsRange = {
+  /** Inclusive lower bound, ISO date string (YYYY-MM-DD). */
+  from?: string;
+  /** Inclusive upper bound, ISO date string (YYYY-MM-DD). */
+  to?: string;
 };
 
-// Stable preset keys the header chips emit. The default ("30d") matches
-// the most common farmer cadence — looking back about a month.
-export const dashboardRangePresets = [
-  { key: "7d", label: "Last 7 days" },
-  { key: "30d", label: "Last 30 days" },
-  { key: "this_month", label: "This month" },
-  { key: "last_month", label: "Last month" },
-  { key: "year", label: "This year" },
-  { key: "all", label: "All time" },
-] as const;
+// The three headline counts a farmer acts on. We carry the prior
+// window's values so the cards can show period-over-period change —
+// a count plus its trend is decision-support; a count alone is not.
+export type HeadlineCounts = {
+  activeHerdSize: number;
+  needsAttention: number;
+  pregnantCount: number;
+};
 
-export type DashboardRangePreset = (typeof dashboardRangePresets)[number]["key"];
-
-// Convert a preset into an actual {from, to} window. `all` returns null
-// so callers can skip the filter entirely.
-export function resolveDateRange(
-  preset: DashboardRangePreset,
-  now: Date = new Date()
-): DashboardDateRange | null {
-  if (preset === "all") {
+/**
+ * The equal-length window immediately preceding `range`, so a 90-day
+ * view compares against the prior 90 days. Returns null when the range
+ * is open-ended (no baseline to compare against) or unparseable.
+ */
+export function previousRange(
+  range: DashboardMetricsRange
+): DashboardMetricsRange | null {
+  if (!(range.from && range.to)) {
     return null;
   }
-  const end = new Date(now);
-  end.setHours(23, 59, 59, 999);
-  const start = new Date(end);
-
-  if (preset === "7d") {
-    start.setDate(end.getDate() - 6);
-    start.setHours(0, 0, 0, 0);
-  } else if (preset === "30d") {
-    start.setDate(end.getDate() - 29);
-    start.setHours(0, 0, 0, 0);
-  } else if (preset === "this_month") {
-    start.setDate(1);
-    start.setHours(0, 0, 0, 0);
-  } else if (preset === "last_month") {
-    start.setMonth(end.getMonth() - 1, 1);
-    start.setHours(0, 0, 0, 0);
-    end.setDate(0);
-    end.setHours(23, 59, 59, 999);
-  } else {
-    // year
-    start.setMonth(0, 1);
-    start.setHours(0, 0, 0, 0);
+  const from = parseISO(range.from);
+  const to = parseISO(range.to);
+  if (Number.isNaN(from.getTime()) || Number.isNaN(to.getTime())) {
+    return null;
   }
-
-  return { from: start.toISOString(), to: end.toISOString() };
+  // Inclusive window spans `spanDays + 1` calendar days; the prior
+  // window ends the day before `from` and is the same length.
+  const spanDays = differenceInCalendarDays(to, from);
+  const prevTo = subDays(from, 1);
+  const prevFrom = subDays(prevTo, spanDays);
+  return {
+    from: format(prevFrom, "yyyy-MM-dd"),
+    to: format(prevTo, "yyyy-MM-dd"),
+  };
 }
 
 export type DashboardMetrics = {
   totalCount: number;
   activeHerdSize: number;
   needsAttention: number;
-  avgAgeMonths: number | null;
+  pregnantCount: number;
   byStatus: StatusCount[];
   byBreed: BreedCount[];
   byGender: GenderCount[];
   byAge: AgeBucketCount[];
-  recentAdditions: RecentAdditionItem[];
+  byBreedAge: BreedAgeCount[];
+  /** Headline counts for the preceding equal-length window, or null
+   * when the range is open-ended and no baseline exists. */
+  previous: HeadlineCounts | null;
 };

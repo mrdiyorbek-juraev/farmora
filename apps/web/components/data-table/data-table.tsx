@@ -11,7 +11,14 @@ import {
   themeQuartz,
 } from "ag-grid-community";
 import { AgGridReact } from "ag-grid-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useSyncExternalStore } from "react";
+
+// `useSyncExternalStore` lets the SSR render and the first client render
+// agree on a value without the useState+useEffect ping-pong that flashes
+// the wrong theme on mount.
+const noopSubscribe = () => () => undefined;
+const getClientSnapshot = () => true;
+const getServerSnapshot = () => false;
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
@@ -130,7 +137,11 @@ export function DataTable<T>({
   selectable = true,
 }: DataTableProps<T>) {
   const { resolvedTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
+  const mounted = useSyncExternalStore(
+    noopSubscribe,
+    getClientSnapshot,
+    getServerSnapshot
+  );
   const gridApiRef = useRef<GridApi<T> | null>(null);
 
   useEffect(() => {
@@ -139,12 +150,6 @@ export function DataTable<T>({
     }
     gridApiRef.current?.deselectAll();
   }, [clearSelectionSignal]);
-
-  // next-themes can only resolve "dark" vs "light" after hydration;
-  // pin to light until mounted to avoid a flash + hydration mismatch.
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const theme = useMemo(() => {
     if (!mounted) {

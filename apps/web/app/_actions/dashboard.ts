@@ -1,12 +1,20 @@
 "use server";
 
-import { getDashboardMetrics } from "@/lib/server/dashboard";
-import { getCurrentOrganization } from "@/lib/server/organization";
-import type { DashboardDateRange } from "@/models/dashboard";
+import { auth } from "@repo/auth/server";
+import {
+  type DashboardMetricsRange,
+  getDashboardMetrics,
+} from "@/lib/server/dashboard";
+import {
+  getCurrentOrganization,
+  OrgUnauthenticatedError,
+} from "@/lib/server/organization";
 
-export async function getDashboardMetricsAction(
-  dateRange?: DashboardDateRange | null
-) {
+export async function getDashboardMetricsAction(range?: DashboardMetricsRange) {
+  const { userId } = await auth();
+  if (!userId) {
+    throw new OrgUnauthenticatedError();
+  }
   const { organization } = await getCurrentOrganization();
-  return getDashboardMetrics(organization.id, dateRange);
+  return getDashboardMetrics(organization.id, range);
 }

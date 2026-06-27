@@ -5,7 +5,7 @@ import type { SortRule } from "@repo/design-system/components/composed/sort";
 import type { ViewColumn } from "@repo/design-system/components/composed/view-settings";
 import { create } from "zustand";
 
-export const HERD_DEFAULT_COLUMNS: ViewColumn[] = [
+const HERD_DEFAULT_COLUMNS: ViewColumn[] = [
   { id: "tag_number", label: "Tag", isLocked: true },
   { id: "name", label: "Name" },
   { id: "breed", label: "Breed" },

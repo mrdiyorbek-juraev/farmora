@@ -7,6 +7,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@repo/design-system/components/ui/empty";
+import { Layers } from "lucide-react";
 
 import type { Breed } from "@/models/cattle";
 import type { BreedCount } from "@/models/dashboard";
@@ -23,19 +31,21 @@ const breedLabels: Record<Breed, string> = {
   other: "Other",
 };
 
-// Rotate through the chart palette so up to 9 breeds get distinct colors
-// without per-breed config plumbing.
+// Rotate through the chart palette so up to 9 breeds get distinct
+// colours without per-breed config.
 const palette = [
   "var(--chart-1)",
   "var(--chart-2)",
   "var(--chart-3)",
   "var(--chart-4)",
-  "var(--chart-5)",
-  "var(--chart-6)",
-  "var(--chart-7)",
-  "var(--chart-8)",
   "var(--chart-9)",
+  "var(--chart-10)",
+  "var(--chart-11)",
+  "var(--chart-13)",
+  "var(--chart-14)",
 ];
+
+const numberFormatter = new Intl.NumberFormat();
 
 export type BreedCompositionProps = {
   data: BreedCount[];
@@ -43,12 +53,13 @@ export type BreedCompositionProps = {
 
 export function BreedComposition({ data }: BreedCompositionProps) {
   const sorted = [...data].sort((a, b) => b.count - a.count);
+  const max = sorted[0]?.count ?? 0;
   const total = sorted.reduce((sum, entry) => sum + entry.count, 0);
 
   return (
-    <Card>
+    <Card className="h-full">
       <CardHeader>
-        <CardTitle>Breed composition</CardTitle>
+        <CardTitle>Breed distribution</CardTitle>
         <CardDescription>Diversity at a glance.</CardDescription>
       </CardHeader>
       <CardContent>
@@ -58,39 +69,30 @@ export function BreedComposition({ data }: BreedCompositionProps) {
           <ul className="flex flex-col gap-3">
             {sorted.map((entry, index) => {
               const color = palette[index % palette.length];
-              const share = entry.count / total;
+              const width = max === 0 ? 0 : (entry.count / max) * 100;
               return (
-                <li
-                  className="flex flex-col gap-1.5"
-                  key={entry.breed}
-                >
-                  <div className="flex items-center justify-between gap-3 text-sm">
-                    <span className="flex items-center gap-2">
+                <li className="flex flex-col gap-1" key={entry.breed}>
+                  <div className="flex items-center justify-between gap-2 text-sm">
+                    <div className="flex items-center gap-2">
                       <span
-                        aria-hidden="true"
-                        className="size-2.5 rounded-full"
+                        aria-hidden
+                        className="size-2 rounded-full"
                         style={{ backgroundColor: color }}
                       />
-                      <span className="font-medium text-foreground">
+                      <span className="font-medium">
                         {breedLabels[entry.breed]}
                       </span>
-                    </span>
-                    <span className="tabular-nums text-muted-foreground">
-                      {entry.count}{" "}
-                      <span className="text-muted-foreground/70">
-                        ({Math.round(share * 100)}%)
-                      </span>
+                    </div>
+                    <span className="text-muted-foreground tabular-nums">
+                      {numberFormatter.format(entry.count)}
                     </span>
                   </div>
-                  <div
-                    aria-hidden="true"
-                    className="h-1.5 w-full overflow-hidden rounded-full bg-muted"
-                  >
+                  <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
                     <div
                       className="h-full rounded-full"
                       style={{
+                        width: `${width}%`,
                         backgroundColor: color,
-                        width: `${share * 100}%`,
                       }}
                     />
                   </div>
@@ -106,11 +108,14 @@ export function BreedComposition({ data }: BreedCompositionProps) {
 
 function EmptyState() {
   return (
-    <div className="flex h-32 flex-col items-center justify-center gap-1 rounded-md border border-border border-dashed p-6 text-center">
-      <p className="font-medium text-sm">No animals yet</p>
-      <p className="text-muted-foreground text-sm">
-        Add animals to see your breed mix.
-      </p>
-    </div>
+    <Empty className="h-56 border">
+      <EmptyHeader>
+        <EmptyMedia variant="icon">
+          <Layers />
+        </EmptyMedia>
+        <EmptyTitle>No animals yet</EmptyTitle>
+        <EmptyDescription>Add animals to see your breed mix.</EmptyDescription>
+      </EmptyHeader>
+    </Empty>
   );
 }

@@ -10,7 +10,13 @@ import {
   type UpdateCattleInput,
 } from "@/models/cattle";
 
-export class CattleQueryError extends Error {
+import { recordActivity } from "./activity";
+
+function describeCattle(row: { tag_number: string; name: string | null }) {
+  return row.name ? `${row.name} (#${row.tag_number})` : `#${row.tag_number}`;
+}
+
+class CattleQueryError extends Error {
   constructor(cause?: unknown) {
     super("Failed to query cattle.");
     this.name = "CattleQueryError";
@@ -18,14 +24,14 @@ export class CattleQueryError extends Error {
   }
 }
 
-export class CattleNotFoundError extends Error {
+class CattleNotFoundError extends Error {
   constructor(id: string) {
     super(`Cattle ${id} not found.`);
     this.name = "CattleNotFoundError";
   }
 }
 
-export class CattleDuplicateTagError extends Error {
+class CattleDuplicateTagError extends Error {
   constructor(tag: string) {
     super(`Tag number "${tag}" already exists for this organization.`);
     this.name = "CattleDuplicateTagError";
@@ -146,6 +152,21 @@ export async function createCattle(
     throw new CattleQueryError(error);
   }
 
+  await recordActivity({
+    organizationId,
+    actorUserId: createdByUserId,
+    cattleId: data.id,
+    type: "cattle_created",
+    title: `Added ${describeCattle(data)} to the herd`,
+    metadata: {
+      tag: data.tag_number,
+      name: data.name,
+      breed: data.breed,
+      gender: data.gender,
+      status: data.status,
+    },
+  });
+
   return data;
 }
 
@@ -217,10 +238,12 @@ export async function updateCattle(
 ): Promise<CattleRow> {
   const db = createAdminClient();
 
-  // Read current row to detect status transitions for history logging
+  // Read the current row so we can diff against the patch — needed both
+  // for status_history (audit of the transition) and for the activity
+  // feed (so a generic "updated" entry can list which fields changed).
   const current = await db
     .from("cattle")
-    .select("status")
+    .select("*")
     .eq("organization_id", organizationId)
     .eq("id", id)
     .maybeSingle();
@@ -231,6 +254,10 @@ export async function updateCattle(
   if (!current.data) {
     throw new CattleNotFoundError(id);
   }
+  // Hoist into a const so TS keeps the non-null narrowing past the
+  // subsequent await — `current.data` widens back to nullable through
+  // the property access otherwise.
+  const before = current.data;
 
   const { data, error } = await db
     .from("cattle")
@@ -247,16 +274,67 @@ export async function updateCattle(
     throw new CattleQueryError(error);
   }
 
-  if (patch.status && patch.status !== current.data.status) {
+  const statusChanged =
+    Boolean(patch.status) && patch.status !== before.status;
+
+  if (statusChanged && patch.status) {
     const history = await db.from("status_history").insert({
       cattle_id: id,
       changed_by_user_id: changedByUserId,
-      from_status: current.data.status,
+      from_status: before.status,
       to_status: patch.status,
     });
     if (history.error) {
       throw new CattleQueryError(history.error);
     }
+
+    await recordActivity({
+      organizationId,
+      actorUserId: changedByUserId,
+      cattleId: id,
+      type: "status_changed",
+      title: `${describeCattle(data)} marked ${patch.status}`,
+      metadata: {
+        tag: data.tag_number,
+        from: before.status,
+        to: patch.status,
+      },
+    });
+  }
+
+  // Compute which non-status fields actually changed so the generic
+  // "updated" entry is informative and isn't logged for no-op saves.
+  const trackedFields = [
+    "tag_number",
+    "name",
+    "breed",
+    "gender",
+    "date_of_birth",
+    "weight_kg",
+    "acquisition",
+    "acquired_date",
+    "notes",
+  ] as const;
+  const changedFields = trackedFields.filter(
+    (field) => patch[field] !== undefined && patch[field] !== before[field]
+  );
+
+  if (changedFields.length > 0) {
+    await recordActivity({
+      organizationId,
+      actorUserId: changedByUserId,
+      cattleId: id,
+      type: "cattle_updated",
+      title: `${describeCattle(data)} updated`,
+      description:
+        changedFields.length === 1
+          ? `Changed ${changedFields[0]}.`
+          : `Changed ${changedFields.length} fields.`,
+      metadata: {
+        tag: data.tag_number,
+        fields: changedFields,
+      },
+    });
   }
 
   return data;
@@ -264,12 +342,24 @@ export async function updateCattle(
 
 export async function deleteManyCattle(
   organizationId: string,
+  deletedByUserId: string,
   ids: string[]
 ): Promise<{ ids: string[]; deleted: number }> {
   if (ids.length === 0) {
     return { ids: [], deleted: 0 };
   }
   const db = createAdminClient();
+
+  // Snapshot tag/name before the delete so the activity rows survive
+  // the FK set-null and still describe what was removed.
+  const snapshot = await db
+    .from("cattle")
+    .select("id, tag_number, name")
+    .eq("organization_id", organizationId)
+    .in("id", ids);
+  if (snapshot.error) {
+    throw new CattleQueryError(snapshot.error);
+  }
 
   // Scope every id by organization_id so a stale client-side selection
   // can't reach into another org's cattle. The .in() filter only
@@ -285,15 +375,46 @@ export async function deleteManyCattle(
     throw new CattleQueryError(error);
   }
 
-  const deletedIds = (data ?? []).map((row) => row.id);
-  return { ids: deletedIds, deleted: deletedIds.length };
+  const deletedIds = new Set((data ?? []).map((row) => row.id));
+  const deletedRows = (snapshot.data ?? []).filter((row) =>
+    deletedIds.has(row.id)
+  );
+
+  await Promise.all(
+    deletedRows.map((row) =>
+      recordActivity({
+        organizationId,
+        actorUserId: deletedByUserId,
+        // cattle_id is null since the row is gone; the tag lives in metadata.
+        cattleId: null,
+        type: "cattle_deleted",
+        title: `Removed ${describeCattle(row)} from the herd`,
+        metadata: { tag: row.tag_number, name: row.name },
+      })
+    )
+  );
+
+  return { ids: Array.from(deletedIds), deleted: deletedIds.size };
 }
 
 export async function deleteCattle(
   organizationId: string,
+  deletedByUserId: string,
   id: string
 ): Promise<{ id: string }> {
   const db = createAdminClient();
+
+  // Snapshot the human-readable identifier first so the activity row
+  // still has the tag after the cattle row is gone.
+  const snapshot = await db
+    .from("cattle")
+    .select("tag_number, name")
+    .eq("organization_id", organizationId)
+    .eq("id", id)
+    .maybeSingle();
+  if (snapshot.error) {
+    throw new CattleQueryError(snapshot.error);
+  }
 
   const { error, count } = await db
     .from("cattle")
@@ -306,6 +427,17 @@ export async function deleteCattle(
   }
   if (!count) {
     throw new CattleNotFoundError(id);
+  }
+
+  if (snapshot.data) {
+    await recordActivity({
+      organizationId,
+      actorUserId: deletedByUserId,
+      cattleId: null,
+      type: "cattle_deleted",
+      title: `Removed ${describeCattle(snapshot.data)} from the herd`,
+      metadata: { tag: snapshot.data.tag_number, name: snapshot.data.name },
+    });
   }
 
   return { id };

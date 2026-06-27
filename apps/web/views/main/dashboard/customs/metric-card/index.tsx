@@ -4,74 +4,90 @@ import {
   Card,
   CardAction,
   CardContent,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
 import { cn } from "@repo/design-system/lib/utils";
-import Link from "next/link";
+import { Minus, TrendingDown, TrendingUp } from "lucide-react";
+
+export type MetricCardDelta = {
+  /** Signed change versus the previous period. */
+  value: number;
+  /** Which direction is the good one — null means neutral (no colour). */
+  improvement: "up" | "down" | null;
+  /** Caption shown next to the change, e.g. "vs prev 90 days". */
+  caption?: string;
+};
 
 export type MetricCardProps = {
   label: string;
-  // `null` means "no data" — renders the empty placeholder. A real `0`
-  // (e.g. zero sick animals while the herd is healthy) still shows "0".
-  value: number | null;
-  // Optional suffix appended to the value (e.g. "mo" for months).
-  suffix?: string;
-  // Short hint line beneath the number — keep to one line.
+  value: number;
+  description?: string;
   hint?: string;
-  // Optional change chip on the same row as the value (e.g. "+6.4%").
-  // Caller decides tone via `changeTone`.
-  change?: string;
-  changeTone?: "positive" | "negative" | "neutral";
   icon: React.ReactNode;
   tone?: "default" | "destructive";
-  // Shown beneath the empty placeholder ("—") when `value` is null.
-  emptyHint?: string;
-  // When provided, the whole card becomes a Link target. `onClick` runs
-  // BEFORE navigation so callers can pre-populate a Zustand store with
-  // the matching filter and have it ready by the time the destination
-  // route mounts.
-  href?: string;
-  onClick?: () => void;
+  isLoading?: boolean;
+  delta?: MetricCardDelta;
 };
 
 const numberFormatter = new Intl.NumberFormat();
 
+function DeltaBadge({ value, improvement, caption }: MetricCardDelta) {
+  const Icon = value === 0 ? Minus : value > 0 ? TrendingUp : TrendingDown;
+  // Colour only when there's a defined "good" direction and the change
+  // is non-zero; neutral metrics and flat periods stay muted.
+  const isGood =
+    improvement === null || value === 0
+      ? null
+      : (value > 0 ? "up" : "down") === improvement;
+
+  return (
+    <span className="flex items-center gap-1.5 text-xs">
+      <span
+        className={cn(
+          "flex items-center gap-0.5 font-medium tabular-nums",
+          isGood === null && "text-muted-foreground",
+          isGood === true && "text-emerald-600 dark:text-emerald-500",
+          isGood === false && "text-destructive"
+        )}
+      >
+        <Icon className="size-3.5" />
+        {value === 0 ? "No change" : numberFormatter.format(Math.abs(value))}
+      </span>
+      {caption ? (
+        <span className="text-muted-foreground">{caption}</span>
+      ) : null}
+    </span>
+  );
+}
+
 export function MetricCard({
   label,
   value,
-  suffix,
+  description,
   hint,
-  change,
-  changeTone = "neutral",
   icon,
   tone = "default",
-  emptyHint = "No data yet",
-  href,
-  onClick,
+  isLoading,
+  delta,
 }: MetricCardProps) {
-  const isDestructive = tone === "destructive";
-  const isEmpty = value === null;
-
-  const card = (
+  return (
     <Card
       className={cn(
-        isDestructive &&
-          "bg-destructive/5 ring-destructive/40 dark:bg-destructive/10",
-        href &&
-          "cursor-pointer transition-colors hover:ring-foreground/25 dark:hover:ring-foreground/20"
+        tone === "destructive" &&
+          "bg-destructive/5 ring-destructive/30 dark:bg-destructive/10"
       )}
-      size="sm"
     >
       <CardHeader>
-        <CardTitle className="font-medium text-muted-foreground text-xs uppercase tracking-wide">
+        <CardTitle className="font-medium text-muted-foreground text-sm">
           {label}
         </CardTitle>
         <CardAction>
           <span
             className={cn(
-              "flex aspect-square size-7 items-center justify-center rounded-md bg-muted text-foreground",
-              isDestructive && "bg-destructive/15 text-destructive"
+              "flex aspect-square size-8 items-center justify-center rounded-md bg-muted text-foreground",
+              tone === "destructive" && "bg-destructive/15 text-destructive"
             )}
           >
             {icon}
@@ -82,50 +98,25 @@ export function MetricCard({
         <div className="flex items-baseline gap-2">
           <span
             className={cn(
-              "font-semibold text-2xl tabular-nums tracking-tight",
-              isDestructive && "text-destructive",
-              isEmpty && "text-muted-foreground"
+              "font-semibold text-3xl tabular-nums tracking-tight",
+              tone === "destructive" && "text-destructive"
             )}
           >
-            {isEmpty ? "—" : numberFormatter.format(value)}
-            {!isEmpty && suffix ? (
-              <span className="ml-1 font-medium text-muted-foreground text-sm">
-                {suffix}
-              </span>
-            ) : null}
+            {isLoading ? "—" : numberFormatter.format(value)}
           </span>
-          {!isEmpty && change ? (
-            <span
-              className={cn(
-                "font-medium text-xs",
-                changeTone === "positive" && "text-emerald-500",
-                changeTone === "negative" && "text-destructive",
-                changeTone === "neutral" && "text-muted-foreground"
-              )}
-            >
-              {change}
+          {hint ? (
+            <span className="font-medium text-muted-foreground text-xs tabular-nums">
+              {hint}
             </span>
           ) : null}
         </div>
-        <span className="text-muted-foreground text-xs">
-          {isEmpty ? emptyHint : hint}
-        </span>
       </CardContent>
+      <CardFooter className="flex flex-col items-start gap-1.5">
+        {delta && !isLoading ? <DeltaBadge {...delta} /> : null}
+        {description ? (
+          <span className="text-muted-foreground text-sm">{description}</span>
+        ) : null}
+      </CardFooter>
     </Card>
-  );
-
-  if (!href) {
-    return card;
-  }
-
-  return (
-    <Link
-      aria-label={`${label} — view in herd list`}
-      className="rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-      href={href}
-      onClick={onClick}
-    >
-      {card}
-    </Link>
   );
 }

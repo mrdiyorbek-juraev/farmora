@@ -26,6 +26,17 @@ export type AcquisitionEnum = "born_on_farm" | "purchased";
 
 export type MembershipRoleEnum = "admin" | "member";
 
+export type ActivityTypeEnum =
+  | "cattle_created"
+  | "cattle_updated"
+  | "cattle_deleted"
+  | "status_changed"
+  | "weight_recorded"
+  | "note_added"
+  | "member_added"
+  | "member_removed"
+  | "organization_updated";
+
 export type Json =
   | string
   | number
@@ -199,6 +210,55 @@ export type Database = {
           },
         ];
       };
+      activities: {
+        Row: {
+          id: string;
+          organization_id: string;
+          actor_user_id: string | null;
+          cattle_id: string | null;
+          type: ActivityTypeEnum;
+          title: string;
+          description: string | null;
+          metadata: Json;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          actor_user_id?: string | null;
+          cattle_id?: string | null;
+          type: ActivityTypeEnum;
+          title: string;
+          description?: string | null;
+          metadata?: Json;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          organization_id?: string;
+          actor_user_id?: string | null;
+          cattle_id?: string | null;
+          type?: ActivityTypeEnum;
+          title?: string;
+          description?: string | null;
+          metadata?: Json;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "activities_organization_id_fkey";
+            columns: ["organization_id"];
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "activities_cattle_id_fkey";
+            columns: ["cattle_id"];
+            referencedRelation: "cattle";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
@@ -208,6 +268,7 @@ export type Database = {
       breed_enum: BreedEnum;
       acquisition_enum: AcquisitionEnum;
       membership_role_enum: MembershipRoleEnum;
+      activity_type_enum: ActivityTypeEnum;
     };
     CompositeTypes: Record<string, never>;
   };
@@ -219,15 +280,20 @@ export type Membership = Database["public"]["Tables"]["memberships"]["Row"];
 export type Cattle = Database["public"]["Tables"]["cattle"]["Row"];
 export type StatusHistory =
   Database["public"]["Tables"]["status_history"]["Row"];
+export type Activity = Database["public"]["Tables"]["activities"]["Row"];
 
 export type OrganizationInsert =
   Database["public"]["Tables"]["organizations"]["Insert"];
 export type MembershipInsert =
   Database["public"]["Tables"]["memberships"]["Insert"];
 export type CattleInsert = Database["public"]["Tables"]["cattle"]["Insert"];
+export type ActivityInsert =
+  Database["public"]["Tables"]["activities"]["Insert"];
 
 export type OrganizationUpdate =
   Database["public"]["Tables"]["organizations"]["Update"];
 export type MembershipUpdate =
   Database["public"]["Tables"]["memberships"]["Update"];
 export type CattleUpdate = Database["public"]["Tables"]["cattle"]["Update"];
+export type ActivityUpdate =
+  Database["public"]["Tables"]["activities"]["Update"];

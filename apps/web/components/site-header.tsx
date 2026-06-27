@@ -16,6 +16,7 @@ import {
 import { Sparkles } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useAskAi } from "@/components/ask-ai";
+import { GlobalSearch } from "@/components/global-search";
 
 const titles: Record<string, string> = {
   dashboard: "Dashboard",
@@ -53,7 +54,15 @@ export function SiteHeader() {
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
-      <div className="ml-auto flex items-center gap-2">
+
+      {/* Centered global search. The flanking flex-1 spacers keep the */}
+      {/* search pill horizontally centered regardless of how wide the */}
+      {/* breadcrumb on the left or the action cluster on the right grow. */}
+      <div className="flex flex-1 justify-center px-2">
+        <GlobalSearch />
+      </div>
+
+      <div className="flex items-center gap-2">
         <Button onClick={toggleAskAi} size="sm" variant="outline">
           <Sparkles />
           Ask AI

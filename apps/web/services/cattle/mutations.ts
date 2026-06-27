@@ -17,6 +17,7 @@ import type {
   UpdateCattleInput,
 } from "@/models/cattle";
 
+import { activityKeys } from "../activity/keys";
 import { dashboardKeys } from "../dashboard/keys";
 
 import { cattleKeys } from "./keys";
@@ -36,11 +37,12 @@ export const useCattleMutations = () => {
   const queryClient = useQueryClient();
 
   // Cattle changes shift every dashboard metric (counts, breakdowns,
-  // age buckets), so we always invalidate the dashboard scope alongside
-  // the cattle list whenever a row mutates.
+  // age buckets) and append a row to the activity feed, so the
+  // cattle/dashboard/activity scopes always invalidate together.
   const invalidateScope = () => {
     queryClient.invalidateQueries({ queryKey: cattleKeys.all(orgId) });
     queryClient.invalidateQueries({ queryKey: dashboardKeys.all(orgId) });
+    queryClient.invalidateQueries({ queryKey: activityKeys.all(orgId) });
   };
 
   // ── Create ──────────────────────────────────────────────────────

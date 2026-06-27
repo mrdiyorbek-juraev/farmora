@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const statusEnum = z.enum([
+const statusEnum = z.enum([
   "active",
   "sick",
   "pregnant",
@@ -8,9 +8,9 @@ export const statusEnum = z.enum([
   "deceased",
 ]);
 
-export const genderEnum = z.enum(["female", "male"]);
+const genderEnum = z.enum(["female", "male"]);
 
-export const breedEnum = z.enum([
+const breedEnum = z.enum([
   "holstein",
   "jersey",
   "angus",
@@ -22,16 +22,16 @@ export const breedEnum = z.enum([
   "other",
 ]);
 
-export const acquisitionEnum = z.enum(["born_on_farm", "purchased"]);
+const acquisitionEnum = z.enum(["born_on_farm", "purchased"]);
 
 export type Status = z.infer<typeof statusEnum>;
 export type Gender = z.infer<typeof genderEnum>;
 export type Breed = z.infer<typeof breedEnum>;
 export type Acquisition = z.infer<typeof acquisitionEnum>;
 
-export const cattleSchema = z.object({
-  id: z.string().uuid(),
-  organization_id: z.string().uuid(),
+const cattleSchema = z.object({
+  id: z.uuid(),
+  organization_id: z.uuid(),
   created_by_user_id: z.string(),
   tag_number: z.string().min(1),
   name: z.string().nullable(),
@@ -47,9 +47,9 @@ export const cattleSchema = z.object({
   updated_at: z.string(),
 });
 
-export const statusHistorySchema = z.object({
-  id: z.string().uuid(),
-  cattle_id: z.string().uuid(),
+const statusHistorySchema = z.object({
+  id: z.uuid(),
+  cattle_id: z.uuid(),
   changed_by_user_id: z.string().nullable(),
   from_status: statusEnum.nullable(),
   to_status: statusEnum,
@@ -57,11 +57,11 @@ export const statusHistorySchema = z.object({
   note: z.string().nullable(),
 });
 
-export const cattleWithHistorySchema = cattleSchema.extend({
+const cattleWithHistorySchema = cattleSchema.extend({
   status_history: z.array(statusHistorySchema),
 });
 
-export const cattleSortColumnEnum = z.enum([
+const cattleSortColumnEnum = z.enum([
   "created_at",
   "tag_number",
   "name",
@@ -71,7 +71,7 @@ export const cattleSortColumnEnum = z.enum([
   "breed",
 ]);
 
-export const sortDirectionEnum = z.enum(["asc", "desc"]);
+const sortDirectionEnum = z.enum(["asc", "desc"]);
 
 export const listCattleFiltersSchema = z.object({
   status: statusEnum.optional(),
@@ -88,7 +88,7 @@ export type CattleSortColumn = z.infer<typeof cattleSortColumnEnum>;
 export type SortDirection = z.infer<typeof sortDirectionEnum>;
 
 export const getCattleByIdInputSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
 });
 
 export const createCattleInputSchema = z.object({
@@ -96,35 +96,35 @@ export const createCattleInputSchema = z.object({
   name: z.string().trim().max(120).optional().nullable(),
   breed: breedEnum,
   gender: genderEnum,
-  date_of_birth: z.string().date(),
+  date_of_birth: z.iso.date(),
   status: statusEnum.optional(),
   weight_kg: z.number().positive().max(9999.99).optional().nullable(),
   acquisition: acquisitionEnum,
-  acquired_date: z.string().date().optional().nullable(),
+  acquired_date: z.iso.date().optional().nullable(),
   notes: z.string().trim().max(2000).optional().nullable(),
 });
 
 export const updateCattleInputSchema = createCattleInputSchema
   .partial()
   .extend({
-    id: z.string().uuid(),
+    id: z.uuid(),
   });
 
 export const deleteCattleInputSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
 });
 
 // Bulk delete cap matches the list page size — keeps the
 // `id in (...)` payload bounded and lets us reject obviously bad
 // callers before they hit the DB.
 export const deleteManyCattleInputSchema = z.object({
-  ids: z.array(z.string().uuid()).min(1).max(200),
+  ids: z.array(z.uuid()).min(1).max(200),
 });
 
 export const checkTagAvailableInputSchema = z.object({
   tag_number: z.string().trim().min(1).max(64),
   // Edit-mode caller passes its own cattle id so the lookup ignores self.
-  exclude_id: z.string().uuid().optional(),
+  exclude_id: z.uuid().optional(),
 });
 
 // ─── Cattle create form ────────────────────────────────────────────

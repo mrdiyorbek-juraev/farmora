@@ -11,7 +11,7 @@ export class OrgUnauthenticatedError extends Error {
   }
 }
 
-export class OrgNotSelectedError extends Error {
+class OrgNotSelectedError extends Error {
   constructor() {
     super("No organization selected. Pick or create one first.");
     this.name = "OrgNotSelectedError";
