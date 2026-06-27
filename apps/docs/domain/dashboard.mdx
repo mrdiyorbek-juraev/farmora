@@ -1,0 +1,49 @@
+---
+title: Dashboard Metrics
+description: "Exact definitions of every dashboard metric and the age-bucket thresholds."
+---
+
+`getDashboardMetrics(organizationId, range?)` (`lib/server/dashboard.ts`) computes the herd
+overview. When a `range` is provided it bounds cattle by `created_at` and also computes the
+prior equal-length window for trend deltas.
+
+## Headline metrics
+
+| Field | Definition |
+| --- | --- |
+| `totalCount` | All cattle in the org (or within `range`). |
+| `activeHerdSize` | Count of cattle whose status is **not** `sold` or `deceased`. The headline number. |
+| `needsAttention` | Count where status = `sick`. |
+| `pregnantCount` | Count where status = `pregnant`. |
+
+## Distributions
+
+| Field | Shape |
+| --- | --- |
+| `byStatus` | `{ status, count }[]` |
+| `byBreed` | `{ breed, count }[]` |
+| `byGender` | `{ gender, count }[]` |
+| `byAge` | `{ bucket, count }[]` (buckets below) |
+| `byBreedAge` | `{ breed, bucket, count }[]` — breed × age cross-tab (the leaderboard) |
+
+## Trend comparison
+
+| Field | Definition |
+| --- | --- |
+| `previous` | `{ activeHerdSize, needsAttention, pregnantCount }` for the **prior equal-length window**, or `null` when the range is open-ended. Drives the "vs prev Nd" deltas on the metric cards. |
+
+## Age buckets
+
+Computed from `date_of_birth` with `differenceInMonths`:
+
+| Bucket | Age range |
+| --- | --- |
+| `calf` | &lt; 6 months |
+| `young` | 6 – 12 months |
+| `adult` | 12 – 60 months (1–5 years) |
+| `mature` | ≥ 60 months (5 years+) |
+
+<Tip>
+  The dashboard charts are built with **Nivo** (`@nivo/bar`, `@nivo/pie`, `@nivo/line`),
+  themed to the design-system CSS variables via `views/main/dashboard/customs/nivo-theme.ts`.
+</Tip>

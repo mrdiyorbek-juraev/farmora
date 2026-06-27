@@ -1,86 +1,93 @@
 ---
-title: 'Quickstart'
-description: 'Start building awesome documentation in under 5 minutes'
+title: Quickstart
+description: "Get Farmora running locally — install, environment, database, and dev servers."
 ---
 
-## Setup your development
+## Prerequisites
 
-Learn how to update your docs locally and and deploy them to the public.
+- **Node** ≥ 18 and **pnpm** 10.31 (the repo pins `packageManager`).
+- A **Clerk** application (auth) and a **Supabase** project (database) — or the Supabase CLI
+  for a fully local database.
 
-### Edit and preview
+## Install
+
+```bash
+pnpm install
+```
+
+This installs the whole monorepo (`apps/*` and `packages/*` via `pnpm-workspace.yaml`).
+
+## Environment
+
+Copy the example env and fill it in for `apps/web`:
+
+```bash
+cp apps/web/.env.example apps/web/.env.local
+```
 
 <AccordionGroup>
-  <Accordion icon="github" title="Clone your docs locally">
-    During the onboarding process, we created a repository on your Github with
-    your docs content. You can find this repository on our
-    [dashboard](https://dashboard.mintlify.com). To clone the repository
-    locally, follow these
-    [instructions](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository)
-    in your terminal.
+  <Accordion title="Clerk (auth)" icon="key">
+    `CLERK_SECRET_KEY`, `CLERK_WEBHOOK_SECRET`, `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`,
+    `NEXT_PUBLIC_CLERK_SIGN_IN_URL`, `NEXT_PUBLIC_CLERK_SIGN_UP_URL`,
+    `NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL`,
+    `NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL`
   </Accordion>
-  <Accordion icon="rectangle-terminal" title="Preview changes">
-    Previewing helps you make sure your changes look as intended. We built a
-    command line interface to render these changes locally. 1. Install the
-    [Mintlify CLI](https://www.npmjs.com/package/mintlify) to preview the
-    documentation changes locally with this command: ``` npm i -g mintlify ```
-    2. Run the following command at the root of your documentation (where
-    `mint.json` is): ``` mintlify dev ```
+  <Accordion title="Supabase (database)" icon="database">
+    `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`
+
+    <Warning>
+      The service-role key bypasses RLS. It is used only in server-only code
+      (`lib/server/*`). Never import the admin client into a client component.
+    </Warning>
+  </Accordion>
+  <Accordion title="App" icon="globe">
+    `NEXT_PUBLIC_WEB_URL`
   </Accordion>
 </AccordionGroup>
 
-### Deploy your changes
+Env vars are validated at build/runtime with `@t3-oss/env-nextjs` (per-package `keys.ts`).
 
-<AccordionGroup>
+## Database
 
-<Accordion icon="message-bot" title="Install our Github app">
-  Our Github app automatically deploys your changes to your docs site, so you
-  don't need to manage deployments yourself. You can find the link to install on
-  your [dashboard](https://dashboard.mintlify.com). Once the bot has been
-  successfully installed, there should be a check mark next to the commit hash
-  of the repo.
-</Accordion>
-<Accordion icon="rocket" title="Push your changes">
-  [Commit and push your changes to
-  Git](https://docs.github.com/en/get-started/using-git/pushing-commits-to-a-remote-repository#about-git-push)
-  for your changes to update in your docs site. If you push and don't see that
-  the Github app successfully deployed your changes, you can also manually
-  update your docs through our [dashboard](https://dashboard.mintlify.com).
-</Accordion>
+Apply migrations to a local Supabase, then regenerate types:
 
-</AccordionGroup>
+```bash
+pnpm --filter @repo/database db:reset    # apply all migrations locally
+# or push to a remote:
+pnpm --filter @repo/database db:push
+```
 
-## Update your docs
+See [Database](/architecture/database) for the schema and migration conventions.
 
-Add content directly in your files with MDX syntax and React components. You can use any of our components, or even build your own.
+## Run
 
-<CardGroup>
+<Steps>
+  <Step title="Start the web app">
+    ```bash
+    pnpm --filter web dev      # http://localhost:3000
+    ```
+  </Step>
+  <Step title="Start the docs (this site)">
+    ```bash
+    pnpm --filter docs dev     # http://localhost:3004
+    ```
+  </Step>
+</Steps>
 
-<Card title="Style Your Docs" icon="paintbrush" href="/settings/global">
-  Add flair to your docs with personalized branding.
-</Card>
+## Everyday commands
 
-<Card
-  title="Add API Endpoints"
-  icon="square-code"
-  href="/api-playground/configuration"
->
-  Implement your OpenAPI spec and enable API user interaction.
-</Card>
+| Task | Command |
+| --- | --- |
+| Web dev server | `pnpm --filter web dev` |
+| Web build | `pnpm --filter web build` |
+| Typecheck | `pnpm --filter web typecheck` |
+| Format + autofix | `pnpm dlx ultracite fix` |
+| Lint (check only) | `pnpm dlx ultracite check` |
+| Unit tests | `pnpm --filter web test` |
+| E2E tests | `pnpm --filter web test:e2e` |
+| New migration | `cd packages/database && pnpm supabase migration new <name>` |
 
-<Card
-  title="Integrate Analytics"
-  icon="chart-mixed"
-  href="/analytics/supported-integrations"
->
-  Draw insights from user interactions with your documentation.
-</Card>
-
-<Card
-  title="Host on a Custom Domain"
-  icon="browser"
-  href="/settings/custom-domain/subdomain"
->
-  Keep your docs on your own website's subdomain.
-</Card>
-
-</CardGroup>
+<Note>
+  Formatting and most linting are handled by **Ultracite** (Biome under the hood). Run
+  `pnpm dlx ultracite fix` before committing.
+</Note>

@@ -1,0 +1,72 @@
+---
+title: Decision Records
+description: "The architectural decisions that shape Farmora, with their context and consequences."
+---
+
+These ADRs capture the load-bearing decisions. Each lists the decision, why it was made, and
+what it costs.
+
+## ADR-001 — Server actions instead of API routes
+
+**Decision.** All client→server communication goes through `app/_actions/*.ts` (`"use
+server"`). There are no `app/api/*/route.ts` handlers.
+
+**Why.** Co-locates validation, auth, and logic; end-to-end typed; less boilerplate than
+route handlers.
+
+**Consequences.** External/3rd-party HTTP integrations (e.g. inbound webhooks) would still
+need route handlers — revisit if that requirement arises.
+
+## ADR-002 — Code-level org-scoping instead of RLS
+
+**Decision.** Use the Supabase **admin** (service-role) client and enforce
+`organization_id` filtering in `lib/server/*`. No RLS policies.
+
+**Why.** Simpler mental model, full query flexibility, no policy debugging.
+
+**Consequences.** Tenant isolation depends entirely on discipline in `lib/server`. Mitigated
+by the "orgId is always the first argument" convention and the server-actions rule. A missed
+`.eq("organization_id", …)` is a cross-tenant leak.
+
+<Warning>
+  This is the single most important security property of the system. Treat any query missing
+  its org scope as a critical bug.
+</Warning>
+
+## ADR-003 — Hand-maintained `database/types.ts`
+
+**Decision.** `packages/database/types.ts` mirrors the migrations and is the typed `Database`
+source for the Supabase client.
+
+**Why.** Keeps types correct without needing a live DB connection to regenerate.
+
+**Consequences.** Adding a table/column means updating both the migration and `types.ts`
+(and the matching Zod model).
+
+## ADR-004 — Derived ADG, denormalized current weight
+
+**Decision.** Store raw `weight_measurements`; derive average daily gain on read; cache only
+the latest weight on `cattle.weight_kg`.
+
+**Why.** Correctness after edits/deletes (nothing to recompute) plus fast list/detail reads.
+
+**Consequences.** `recordWeight`/`deleteWeight` must re-sync the cached `cattle.weight_kg`.
+
+## ADR-005 — Global modal host
+
+**Decision.** Store-driven modals (`animalForm`, `weightForm`) render once via `GlobalModals`
+in the root layout, each wrapped in a React `<Activity>`.
+
+**Why.** Any view can open a modal through the modal store without mounting it locally; form
+state persists while the modal is hidden.
+
+**Consequences.** New global modals are added in exactly one place, `components/modals/`.
+
+## ADR-006 — Best-effort activity logging
+
+**Decision.** `recordActivity()` logs on failure and never throws.
+
+**Why.** Losing an audit row should never roll back the business mutation it describes.
+
+**Consequences.** The activity feed is eventually-accurate, not transactional — acceptable
+for an audit/notification feed.

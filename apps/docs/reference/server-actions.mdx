@@ -1,0 +1,65 @@
+---
+title: Server Actions
+description: "The complete server-action surface — Farmora's entire backend API."
+---
+
+All server-side work runs through server actions in `apps/web/app/_actions/*.ts`. Each one
+validates its input with a Zod schema, calls `getCurrentOrganization()`, and delegates to a
+`lib/server/<domain>.ts` function. **There are no API route handlers.**
+
+## Cattle — `_actions/cattle.ts`
+
+| Action | Delegates to | Returns |
+| --- | --- | --- |
+| `listCattleAction(filters)` | `listCattle(orgId, filters)` | `{ rows, total }` |
+| `getCattleAction({ id })` | `getCattleById(orgId, id)` | cattle + `status_history` |
+| `createCattleAction(input)` | `createCattle(orgId, userId, input)` | the new row |
+| `updateCattleAction(input)` | `updateCattle(orgId, userId, input)` | the updated row |
+| `deleteCattleAction({ id })` | `deleteCattle(orgId, userId, id)` | `{ id }` |
+| `deleteManyCattleAction({ ids })` | `deleteManyCattle(orgId, userId, ids)` | `{ ids, deleted }` |
+| `checkCattleTagAvailableAction(input)` | `isCattleTagAvailable(orgId, tag, excludeId?)` | `{ available }` |
+| `generateCattleTagAction()` | `generateCattleTag(orgId)` | `{ tag }` |
+
+## Weight — `_actions/weight.ts`
+
+| Action | Delegates to | Returns |
+| --- | --- | --- |
+| `listWeightHistoryAction({ cattle_id })` | `listWeightHistory(orgId, cattleId)` | series with ADG |
+| `recordWeightAction(input)` | `recordWeight(orgId, userId, input)` | the measurement |
+| `deleteWeightAction({ id })` | `deleteWeight(orgId, id)` | `{ id, cattle_id }` |
+
+## Activity — `_actions/activity.ts`
+
+| Action | Delegates to | Returns |
+| --- | --- | --- |
+| `listActivitiesByCattleAction(input)` | `listActivitiesByCattle(orgId, cattleId, limit)` | `ActivityRow[]` |
+
+## Dashboard — `_actions/dashboard.ts`
+
+| Action | Delegates to | Returns |
+| --- | --- | --- |
+| `getDashboardMetricsAction(range?)` | `getDashboardMetrics(orgId, range)` | `DashboardMetrics` |
+
+## Domain errors
+
+Thrown by `lib/server/*` and surfaced to the user through the React Query mutation toast
+layer:
+
+| Error | Meaning |
+| --- | --- |
+| `OrgUnauthenticatedError` | Not signed in. |
+| `OrgNotSelectedError` | No organization selected. |
+| `OrgProvisioningError` | Org/membership upsert failed. |
+| `CattleQueryError` | Wraps an underlying Supabase/Postgres error. |
+| `CattleNotFoundError` | Cattle row not found in this org. |
+| `CattleDuplicateTagError` | Tag already used in this org (PG `23505`). |
+| `WeightQueryError` | Weight query/insert failure. |
+| `WeightCattleNotFoundError` | Subject animal not found (org-scoped). |
+| `WeightNotFoundError` | Measurement not found. |
+| `ActivityQueryError` | Activity read failure. |
+| `DashboardQueryError` | Metrics query failure. |
+
+<Tip>
+  Adding an action? Follow the recipe in [Conventions](/contributing/conventions): Zod schema
+  → `lib/server` function (orgId first) → thin `_actions` wrapper → React Query hook.
+</Tip>

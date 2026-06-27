@@ -1,0 +1,59 @@
+---
+title: Testing & Quality
+description: "Unit, integration, and E2E testing, plus linting and the agent harness."
+---
+
+## Test types
+
+| Kind | Tool | Command | Config |
+| --- | --- | --- | --- |
+| Unit | Vitest | `pnpm --filter web test` | `vitest.config.ts` — env `node`, match `**/*.test.{ts,tsx}`, excludes integration/e2e |
+| Integration | Vitest | `pnpm --filter web test:integration` | `vitest.integration.config.ts` — match `**/tests/integration/**` |
+| E2E | Playwright | `pnpm --filter web test:e2e` | |
+
+## Conventions
+
+- Use **Vitest** (not Jest). Colocate `*.test.ts` next to the source.
+- `async/await`, never done-callbacks. No `.only` / `.skip` in committed code.
+- Keep suites flat — avoid deep `describe` nesting.
+- Assertions live inside `it()` / `test()`.
+- Test behavior and outcomes, not implementation details.
+
+## Integration tests
+
+Integration tests run against **real** Clerk + Supabase and are intentionally separate from
+unit tests (they never run in `vitest run` or the Vercel build). Because there are no API
+routes, they import and call server-action functions directly with a set-up Clerk session.
+
+<Note>
+  For `lib/server/*` tests, prefer integration tests against a real Supabase test schema —
+  the duplicate-tag path in particular needs the real unique constraint to trigger. Mocking
+  the admin client is brittle.
+</Note>
+
+## Linting & formatting
+
+```bash
+pnpm dlx ultracite fix      # format + autofix (Biome under the hood)
+pnpm dlx ultracite check    # check only
+pnpm --filter web typecheck # tsc --noEmit
+```
+
+## React health & CI
+
+- `pnpm --filter web doctor` runs **react-doctor** locally.
+- **CI** (`.github/workflows/react-doctor.yml`) runs react-doctor on PRs (changed files) and
+  on push to `main` (full scan), posting a sticky comment + inline review comments. Advisory
+  by default.
+
+## The agent harness (`.claude/`)
+
+The repo ships a Claude Code harness used during development:
+
+- **Rules** (`.claude/rules/`) — 25 path-scoped coding rules, auto-loaded by directory.
+- **Agents** (`.claude/agents/`) — `migration-generator`, `code-reviewer`,
+  `security-reviewer`, `tdd-test-writer`, `tdd-implementer`, `integration-test-writer`.
+- **Skills** (`.claude/skills/`) — `/feature`, `/fix`, `/tdd`, `/refactor`, `/review`,
+  `/database-patterns`, and more.
+
+See `.claude/CLAUDE.md` (root) and `apps/web/.claude/CLAUDE.md` (app) for the full standards.

@@ -1,0 +1,87 @@
+---
+title: Conventions
+description: "Folder layout, the vertical-slice recipe, forms, and the rules the codebase enforces."
+---
+
+## Folder layout (`apps/web`)
+
+```
+app/[locale]/
+  (auth)/        sign-in / sign-up
+  (main)/        authed shell (sidebar + header): dashboard, herd, [feature]
+  _actions/      server actions — the API surface
+lib/server/      server-only DB/business logic
+lib/forms/       zod-validate helper
+lib/utils/       shared client helpers
+models/          Zod schemas + form transformers (per domain)
+services/        React Query hooks (per domain): index.ts, mutations.ts, keys.ts
+stores/          Zustand stores (herd.ts, shared/modal-store.ts)
+views/           page-level UI compositions; <area>/customs for locals
+components/       reusable building blocks (modals, app-sidebar, global-search, data-table)
+constants/       navigation.ts (sidebar source of truth), etc.
+mocks/           static option lists per domain
+```
+
+## Adding a feature (the vertical-slice recipe)
+
+<Steps>
+  <Step title="Migration">
+    `cd packages/database && pnpm supabase migration new <name>`, then update
+    `packages/database/types.ts` to match. See [Database](/architecture/database).
+  </Step>
+  <Step title="Model">
+    Add Zod schemas + inferred types + form transformer to `models/<domain>.ts`.
+  </Step>
+  <Step title="Server logic">
+    Add functions to `lib/server/<domain>.ts` (`import "server-only"`). Take `organizationId`
+    first, scope every query, throw domain errors.
+  </Step>
+  <Step title="Server action">
+    Add a thin wrapper to `app/_actions/<domain>.ts` (`"use server"`): parse → org → delegate.
+  </Step>
+  <Step title="Service hook">
+    Add React Query hooks to `services/<domain>/` with a `keys.ts` factory; mutations own
+    toasts + invalidation.
+  </Step>
+  <Step title="UI">
+    Build the view under `views/<area>/`. Global modals go in `components/modals/`.
+  </Step>
+</Steps>
+
+## Forms
+
+Standard stack: **Formik + Zod**, glued by `zodValidate(schema)` from `@/lib/forms/zod-validate`.
+
+- Form schemas treat every field as a **string** (empty string is the neutral value).
+- A `<domain>FormToCreateInput()` transformer converts validated form values into the typed
+  action input (empty → `null`, numeric strings → numbers).
+- Required selects use `""` + a `.min(1, "...required")` refinement that pipes into the enum.
+
+## The rules that matter
+
+<CardGroup cols={2}>
+  <Card title="Org-scope every query" icon="shield">
+    `organizationId` is the first argument of every `lib/server` function; every query has
+    `.eq("organization_id", organizationId)`.
+  </Card>
+  <Card title="Server actions only" icon="server">
+    No `app/api/*/route.ts`. All client→server traffic goes through `_actions`.
+  </Card>
+  <Card title="Admin client is server-only" icon="lock">
+    `createAdminClient()` is never imported into a client component.
+  </Card>
+  <Card title="Design system components" icon="palette">
+    Use `@repo/design-system/components/ui/*` — never raw `button`/`input`/`select`/`dialog`.
+  </Card>
+</CardGroup>
+
+The full ruleset lives in `.claude/rules/` (path-scoped) and `.claude/CLAUDE.md`. Format with
+`pnpm dlx ultracite fix` before committing.
+
+## UI building blocks to reuse
+
+- **Global modals** — add to `components/modals/`; opened via the modal store, never mounted
+  per-view.
+- **Sidebar nav** — edit `constants/navigation.ts`; flip a feature from `soon` to `ready`.
+- **Feature hooks** — put a view's composed action logic in a `features.ts` hook (e.g.
+  `useHerdFeatures`); read shared store state imperatively with `getState()` in handlers.

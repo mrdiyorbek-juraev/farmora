@@ -1,0 +1,22 @@
+---
+title: Glossary
+description: "Domain terms used across Farmora and where they live in code."
+---
+
+| Term | Definition | Where in code |
+| --- | --- | --- |
+| **Organization** | A tenant (a farm). Mirrors a Clerk organization. Owns all data. | `organizations` table |
+| **Membership** | A user's link to an organization, with a `role`. | `memberships` table |
+| **Cattle / Animal** | A single head of cattle — the central entity. | `cattle` table, `models/cattle.ts` |
+| **Tag** | An animal's identifier, unique within an organization. | `cattle.tag_number` |
+| **Herd** | An organization's collection of cattle (the list view). | `views/main/herd` |
+| **Status** | Lifecycle state: active, sick, pregnant, sold, deceased. | `status_enum` |
+| **Status history** | Per-animal log of status transitions. | `status_history` table |
+| **Weight measurement** | A point-in-time weigh-in (kg) on a date. | `weight_measurements` table |
+| **ADG** | Average Daily Gain — kg gained per day between two weigh-ins (derived). | `lib/server/weight.ts` |
+| **Current weight** | Denormalized cache of an animal's latest measurement. | `cattle.weight_kg` |
+| **Activity** | An entry in the append-only org event feed. | `activities` table |
+| **Active herd size** | Count of cattle not `sold`/`deceased` — the headline metric. | `lib/server/dashboard.ts` |
+| **JIT provisioning** | Lazy creation of org + membership on first authed request. | `getCurrentOrganization()` |
+| **Server action** | The `"use server"` function that is Farmora's backend API surface. | `app/_actions/*` |
+| **Vertical slice** | The model → lib/server → action → service → view path of a feature. | see [Conventions](/contributing/conventions) |

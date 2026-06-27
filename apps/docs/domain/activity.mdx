@@ -1,0 +1,63 @@
+---
+title: Activity Feed
+description: "The append-only org event log: what gets recorded and the best-effort guarantee."
+---
+
+The `activities` table is an **append-only, organization-wide event log**. It powers the
+per-animal activity timeline and the dashboard's recent-activity surfaces.
+
+## Event types
+
+`activity_type_enum`:
+
+| Type | Emitted when |
+| --- | --- |
+| `cattle_created` | An animal is added. |
+| `cattle_updated` | Tracked non-status fields change. |
+| `cattle_deleted` | An animal is removed (tag snapshotted in metadata). |
+| `status_changed` | An animal's status changes (`metadata: { tag, from, to }`). |
+| `weight_recorded` | A weight measurement is recorded. |
+| `note_added` | Reserved. |
+| `member_added` | Reserved. |
+| `member_removed` | Reserved. |
+| `organization_updated` | Reserved. |
+
+<Note>
+  Not every type is wired yet — the `*_reserved* ` types exist in the enum ahead of the
+  features that will emit them. See `lib/server/*` for which are currently produced.
+</Note>
+
+## Best-effort writes
+
+`recordActivity()` is **best-effort**: on failure it logs to the console and returns — it
+never throws.
+
+<Warning>
+  Losing an audit row must never roll back the business mutation it describes. The feed is
+  eventually-accurate, not transactional.
+</Warning>
+
+## Surviving deletes
+
+When a cattle row is deleted, `activities.cattle_id` is set **NULL** (not cascaded), and the
+animal's tag/name are snapshotted into the `metadata` JSON. The history still reads correctly
+after the animal is gone.
+
+## Shape
+
+```ts
+type ActivityRow = {
+  id: string;
+  organization_id: string;
+  actor_user_id: string | null;   // null for system events
+  cattle_id: string | null;       // null after the subject is deleted
+  type: ActivityType;
+  title: string;                  // e.g. "Bessie (#014) marked sick"
+  description: string | null;
+  metadata: Json;                 // structured payload: tags, old/new values
+  created_at: string;
+};
+```
+
+The feed is read newest-first, scoped by org. The `(organization_id, created_at DESC)` index
+drives it.

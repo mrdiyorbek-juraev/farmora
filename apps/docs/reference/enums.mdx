@@ -1,0 +1,44 @@
+---
+title: Enums
+description: "Canonical enum values shared between the database and the Zod models."
+---
+
+Enum values are **lowercase** in SQL and must match the Zod enums in
+`apps/web/models/cattle.ts` exactly.
+
+<Warning>
+  Changing an enum means changing three places together: the migration, the `Database` type
+  in `packages/database/types.ts`, and the Zod enum in the model. Mismatches cause runtime
+  validation failures.
+</Warning>
+
+## `status_enum`
+
+`active` · `sick` · `pregnant` · `sold` · `deceased`
+
+## `gender_enum`
+
+`female` · `male`
+
+## `breed_enum`
+
+`holstein` · `jersey` · `angus` · `hereford` · `brown_swiss` · `guernsey` · `charolais` ·
+`simmental` · `other`
+
+## `acquisition_enum`
+
+`born_on_farm` · `purchased`
+
+## `membership_role_enum`
+
+`admin` · `member`
+
+## `activity_type_enum`
+
+`cattle_created` · `cattle_updated` · `cattle_deleted` · `status_changed` · `weight_recorded`
+· `note_added` · `member_added` · `member_removed` · `organization_updated`
+
+<Note>
+  UI label maps (e.g. `holstein` → "Holstein") and dropdown option lists live in
+  `apps/web/mocks/<domain>/` and `apps/web/constants/`, kept in sync with these enums.
+</Note>

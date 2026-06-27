@@ -1,0 +1,83 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "Farmora",
+  "colors": {
+    "primary": "#0D9373",
+    "light": "#07C983",
+    "dark": "#0D9373"
+  },
+  "favicon": "/favicon.svg",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "quickstart"
+            ]
+          },
+          {
+            "group": "Architecture",
+            "pages": [
+              "architecture/overview",
+              "architecture/multitenancy",
+              "architecture/database",
+              "architecture/decisions"
+            ]
+          },
+          {
+            "group": "Domain & Business Logic",
+            "pages": [
+              "domain/cattle",
+              "domain/weight",
+              "domain/dashboard",
+              "domain/activity",
+              "domain/roles"
+            ]
+          },
+          {
+            "group": "Reference",
+            "pages": [
+              "reference/server-actions",
+              "reference/enums",
+              "reference/glossary"
+            ]
+          },
+          {
+            "group": "Contributing",
+            "pages": [
+              "contributing/conventions",
+              "contributing/testing"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "logo": {
+    "light": "/logo/light.svg",
+    "dark": "/logo/dark.svg"
+  },
+  "navbar": {
+    "links": [
+      {
+        "label": "Web app",
+        "href": "http://localhost:3000"
+      }
+    ],
+    "primary": {
+      "type": "button",
+      "label": "Repository",
+      "href": "https://github.com/mrdiyorbek-juraev/farmora"
+    }
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/mrdiyorbek-juraev/farmora"
+    }
+  }
+}

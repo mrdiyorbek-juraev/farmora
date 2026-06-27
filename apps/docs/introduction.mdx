@@ -1,71 +1,62 @@
 ---
 title: Introduction
-description: 'Welcome to the home of your new documentation'
+description: "Farmora — a farm-facing cattle management platform. Internal engineering documentation."
 ---
 
-<img
-  className="block dark:hidden"
-  src="/images/hero-light.svg"
-  alt="Hero Light"
-/>
-<img
-  className="hidden dark:block"
-  src="/images/hero-dark.svg"
-  alt="Hero Dark"
-/>
+**Farmora** lets a farm manage its herd: register animals, track their status, weight,
+and history over time, and see herd-level metrics — all scoped per organization
+(multi-tenant). This is the internal engineering documentation, ground-truthed against the
+codebase.
 
-## Setting up
+<Info>
+  The product surface is `apps/web` (Next.js 16). `apps/docs` (this site) and
+  `apps/storybook` are secondary.
+</Info>
 
-The first step to world-class documentation is setting up your editing environments.
+## The three pillars
 
 <CardGroup cols={2}>
-  <Card
-    title="Edit Your Docs"
-    icon="pen-to-square"
-    href="https://mintlify.com/docs/quickstart"
-  >
-    Get your docs set up locally for easy development
+  <Card title="Architecture" icon="sitemap" href="/architecture/overview">
+    Stack, the layered data flow, multitenancy, the database, and the decisions behind them.
   </Card>
-  <Card
-    title="Preview Changes"
-    icon="image"
-    href="https://mintlify.com/docs/development"
-  >
-    Preview your changes before you push to make sure they're perfect
+  <Card title="Domain & Business Logic" icon="cow" href="/domain/cattle">
+    Cattle lifecycle, tagging, weight & growth, dashboard metrics, and the activity feed.
+  </Card>
+  <Card title="Reference" icon="list" href="/reference/server-actions">
+    Server actions, enums, and the domain glossary.
+  </Card>
+  <Card title="Contributing" icon="code" href="/contributing/conventions">
+    Folder conventions, the vertical-slice recipe, and testing.
   </Card>
 </CardGroup>
 
-## Make it yours
-
-Update your docs to your brand and add valuable content for the best user conversion.
+## What's live today
 
 <CardGroup cols={2}>
-  <Card
-    title="Customize Style"
-    icon="palette"
-    href="https://mintlify.com/docs/settings/global"
-  >
-    Customize your docs to your company's colors and brands
+  <Card title="Live" icon="circle-check">
+    Dashboard · Herd (list + detail) · Cattle CRUD · Status history · Weight history ·
+    Activity feed · Global search
   </Card>
-  <Card
-    title="Reference APIs"
-    icon="code"
-    href="https://mintlify.com/docs/api-playground/openapi"
-  >
-    Automatically generate endpoints from an OpenAPI spec
-  </Card>
-  <Card
-    title="Add Components"
-    icon="screwdriver-wrench"
-    href="https://mintlify.com/docs/components/accordion"
-  >
-    Build interactive features and designs to guide your users
-  </Card>
-  <Card
-    title="Get Inspiration"
-    icon="stars"
-    href="https://mintlify.com/customers"
-  >
-    Check out our showcase of our favorite documentation
+  <Card title="Coming soon" icon="clock">
+    Breeding · Health · Production/Milk · Growth · Paddocks · Feed · Supplies · Machinery ·
+    Tasks · Calendar · Finance · Market · Team · Settings · Farm AI
   </Card>
 </CardGroup>
+
+## Stack at a glance
+
+| Layer | Technology |
+| --- | --- |
+| Framework | Next.js 16 (App Router + Turbopack), React 19 |
+| Auth | Clerk (`@repo/auth`) |
+| Database | Supabase / Postgres (`@repo/database`) |
+| Server state | TanStack React Query |
+| Forms | Formik + Zod |
+| UI state | Zustand |
+| UI | `@repo/design-system` (shadcn / Radix / Base UI) + Tailwind v4 |
+| Monorepo | Turborepo + pnpm |
+
+<Note>
+  The "backend" is a set of **server actions** (`app/_actions/*`). There are **no API route
+  handlers** in this project — see [Architecture overview](/architecture/overview).
+</Note>
