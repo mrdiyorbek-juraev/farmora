@@ -8,11 +8,13 @@ import {
   TabsTrigger,
 } from "@repo/design-system/components/ui/tabs";
 import { format, isValid, parseISO } from "date-fns";
-import { Activity, FileText, History, StickyNote } from "lucide-react";
+import { Activity, FileText, History, StickyNote, Weight } from "lucide-react";
 
-import type { CattleWithHistory, Status } from "@/models/cattle";
+import type { Status } from "@/models/cattle";
+import type { AnimalMainContentProps } from "@/types/main/herd-detail";
 
 import { ActivityLog } from "../activity-log";
+import { WeightHistory } from "../weight-history";
 
 const statusLabels: Record<Status, string> = {
   active: "Active",
@@ -44,37 +46,41 @@ function formatDateTime(value: string | null | undefined) {
   return format(parsed, "MMM d, yyyy 'at' h:mm a");
 }
 
-export type AnimalMainContentProps = {
-  animal: CattleWithHistory;
-};
-
 export function AnimalMainContent({ animal }: AnimalMainContentProps) {
   return (
     <Tabs className="flex h-full flex-col" defaultValue="activity">
-      <TabsList className="self-start">
-        <TabsTrigger value="activity">
+      <TabsList className="self-stretch border-b px-4 pb-4" variant="underline">
+        <TabsTrigger value="activity" variant="underline">
           <Activity />
           Activity
         </TabsTrigger>
-        <TabsTrigger value="history">
+        <TabsTrigger value="weight" variant="underline">
+          <Weight />
+          Weight history
+        </TabsTrigger>
+        <TabsTrigger value="history" variant="underline">
           <History />
           Status history
         </TabsTrigger>
-        <TabsTrigger value="notes">
+        <TabsTrigger value="notes" variant="underline">
           <StickyNote />
           Notes
         </TabsTrigger>
-        <TabsTrigger value="files">
+        <TabsTrigger value="files" variant="underline">
           <FileText />
           Files
         </TabsTrigger>
       </TabsList>
 
-      <TabsContent className="mt-4 flex-1" value="activity">
+      <TabsContent className="mt-4 flex-1 px-4" value="activity">
         <ActivityLog cattleId={animal.id} />
       </TabsContent>
 
-      <TabsContent className="mt-4 flex-1" value="history">
+      <TabsContent className="mt-4 flex-1 px-4" value="weight">
+        <WeightHistory animal={animal} />
+      </TabsContent>
+
+      <TabsContent className="mt-4 flex-1 px-4" value="history">
         {animal.status_history.length === 0 ? (
           <EmptyState
             description="Every time you change this animal's status it'll show up here."
@@ -114,7 +120,7 @@ export function AnimalMainContent({ animal }: AnimalMainContentProps) {
         )}
       </TabsContent>
 
-      <TabsContent className="mt-4 flex-1" value="notes">
+      <TabsContent className="mt-4 flex-1 px-4" value="notes">
         {animal.notes ? (
           <div className="rounded-md border border-border p-4">
             <p className="whitespace-pre-wrap text-sm leading-relaxed">
@@ -129,7 +135,7 @@ export function AnimalMainContent({ animal }: AnimalMainContentProps) {
         )}
       </TabsContent>
 
-      <TabsContent className="mt-4 flex-1" value="files">
+      <TabsContent className="mt-4 flex-1 px-4" value="files">
         <EmptyState
           description="Vet reports, registration certificates, and photos will land here."
           title="No files attached"

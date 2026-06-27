@@ -210,6 +210,52 @@ export type Database = {
           },
         ];
       };
+      weight_measurements: {
+        Row: {
+          id: string;
+          organization_id: string;
+          cattle_id: string;
+          recorded_by_user_id: string | null;
+          weight_kg: number;
+          measured_at: string;
+          note: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          cattle_id: string;
+          recorded_by_user_id?: string | null;
+          weight_kg: number;
+          measured_at: string;
+          note?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          organization_id?: string;
+          cattle_id?: string;
+          recorded_by_user_id?: string | null;
+          weight_kg?: number;
+          measured_at?: string;
+          note?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "weight_measurements_organization_id_fkey";
+            columns: ["organization_id"];
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "weight_measurements_cattle_id_fkey";
+            columns: ["cattle_id"];
+            referencedRelation: "cattle";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       activities: {
         Row: {
           id: string;
@@ -281,6 +327,8 @@ export type Cattle = Database["public"]["Tables"]["cattle"]["Row"];
 export type StatusHistory =
   Database["public"]["Tables"]["status_history"]["Row"];
 export type Activity = Database["public"]["Tables"]["activities"]["Row"];
+export type WeightMeasurement =
+  Database["public"]["Tables"]["weight_measurements"]["Row"];
 
 export type OrganizationInsert =
   Database["public"]["Tables"]["organizations"]["Insert"];
@@ -289,6 +337,8 @@ export type MembershipInsert =
 export type CattleInsert = Database["public"]["Tables"]["cattle"]["Insert"];
 export type ActivityInsert =
   Database["public"]["Tables"]["activities"]["Insert"];
+export type WeightMeasurementInsert =
+  Database["public"]["Tables"]["weight_measurements"]["Insert"];
 
 export type OrganizationUpdate =
   Database["public"]["Tables"]["organizations"]["Update"];

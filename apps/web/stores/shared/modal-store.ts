@@ -1,28 +1,35 @@
 "use client";
 
-import type { CattleWithHistory } from "@/models/cattle";
 import { create, type StateCreator } from "zustand";
+import type { CattleWithHistory } from "@/models/cattle";
 
 // ─── Global Modal ────────────────────────────────────────────────────────────
-//
-// One store, many modals. Add a new entry per modal:
-//   <modalName>: { open: boolean; props: <PayloadType> | null }
-//
-// Toggle with `setModal({ <modalName>: { open: true, props: ... } })`.
-// `props: null` means create / blank; a populated `props` means edit.
-
 interface GlobalModal {
   animalForm: {
     open: boolean;
     props: CattleWithHistory | null;
   };
+  search: {
+    open: boolean;
+  };
   setModal: (payload: Partial<GlobalModal>) => void;
+  weightForm: {
+    open: boolean;
+    cattleId: string | null;
+  };
 }
 
 export const initialGlobalModal: Omit<GlobalModal, "setModal"> = {
   animalForm: {
     open: false,
     props: null,
+  },
+  search: {
+    open: false,
+  },
+  weightForm: {
+    open: false,
+    cattleId: null,
   },
 };
 

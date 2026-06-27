@@ -17,11 +17,8 @@ import {
 } from "@repo/design-system/components/ui/empty";
 import { CakeSlice } from "lucide-react";
 
-import {
-  type AgeBucket,
-  type AgeBucketCount,
-  ageBucketLabels,
-} from "@/models/dashboard";
+import { type AgeBucket, ageBucketLabels } from "@/models/dashboard";
+import type { AgeDistributionProps } from "@/types/main/dashboard";
 
 import { nivoTheme } from "../nivo-theme";
 
@@ -32,10 +29,6 @@ const bucketHint: Record<AgeBucket, string> = {
   young: "6 mo – 1 yr",
   adult: "1 – 5 yr",
   mature: "5+ yr",
-};
-
-export type AgeDistributionProps = {
-  data: AgeBucketCount[];
 };
 
 export function AgeDistribution({ data }: AgeDistributionProps) {

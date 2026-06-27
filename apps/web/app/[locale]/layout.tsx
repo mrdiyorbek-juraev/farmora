@@ -2,6 +2,8 @@ import { Providers } from "@/lib/providers";
 import { Geist, Geist_Mono, Newsreader } from "next/font/google";
 import type { ReactNode } from "react";
 
+import { GlobalModals } from "@/components/modals";
+
 import "./styles.css";
 
 const geistSans = Geist({
@@ -34,7 +36,10 @@ const RootLayout = async ({ children }: RootLayoutProperties) => {
       className="dark" lang="en" suppressHydrationWarning
     >
       <body  className={`${geistSans.variable} ${geistMono.variable} ${newsreader.variable} font-sans antialiased`}>
-        <Providers>{children}</Providers>
+        <Providers>
+          {children}
+          <GlobalModals />
+        </Providers>
       </body> 
     </html>
   );

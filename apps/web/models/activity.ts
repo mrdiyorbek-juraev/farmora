@@ -1,7 +1,7 @@
 import type { Activity } from "@repo/database/types";
 import { z } from "zod";
 
-export const activityTypeEnum = z.enum([
+const activityTypeEnum = z.enum([
   "cattle_created",
   "cattle_updated",
   "cattle_deleted",
@@ -18,7 +18,7 @@ export type ActivityType = z.infer<typeof activityTypeEnum>;
 export type ActivityRow = Activity;
 
 export const listActivitiesByCattleInputSchema = z.object({
-  cattleId: z.string().uuid(),
+  cattleId: z.uuid(),
   limit: z.number().int().positive().max(200).default(50),
 });
 

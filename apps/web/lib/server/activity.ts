@@ -5,7 +5,7 @@ import type { ActivityInsert, Json } from "@repo/database/types";
 
 import type { ActivityRow, ActivityType } from "@/models/activity";
 
-export class ActivityQueryError extends Error {
+class ActivityQueryError extends Error {
   constructor(cause?: unknown) {
     super("Failed to query activities.");
     this.name = "ActivityQueryError";

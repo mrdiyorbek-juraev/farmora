@@ -2,7 +2,9 @@
 
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { differenceInMonths, format, isValid, parseISO } from "date-fns";
-import type { CattleWithHistory, Status } from "@/models/cattle";
+
+import type { Status } from "@/models/cattle";
+import type { AnimalSubHeaderProps } from "@/types/main/herd-detail";
 
 const statusLabels: Record<Status, string> = {
   active: "Active",
@@ -46,10 +48,6 @@ function computeAgeLabel(dob: string | null | undefined): string | null {
   return `${years} yr ${remainder} mo old`;
 }
 
-export type AnimalSubHeaderProps = {
-  animal: CattleWithHistory;
-};
-
 export function AnimalSubHeader({ animal }: AnimalSubHeaderProps) {
   const age = computeAgeLabel(animal.date_of_birth);
   const addedAt = parseISO(animal.created_at);
@@ -58,7 +56,7 @@ export function AnimalSubHeader({ animal }: AnimalSubHeaderProps) {
     : null;
 
   return (
-    <div className="flex flex-wrap items-center gap-2 border-b border-border bg-muted/40 px-4 py-2">
+    <div className="flex flex-wrap items-center gap-2 border-border border-b bg-muted/40 px-4 py-2">
       <Badge variant={statusVariant[animal.status]}>
         {statusLabels[animal.status]}
       </Badge>

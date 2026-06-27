@@ -62,9 +62,9 @@ function RecordDetailsSkeleton() {
       {/* updated) so the sidebar height doesn't change on resolve.   */}
       {Array.from({ length: 10 }).map((_, index) => (
         <div
+          className="grid grid-cols-[120px_1fr] items-center gap-3 py-1.5"
           // biome-ignore lint/suspicious/noArrayIndexKey: stable skeleton row count
           key={index}
-          className="grid grid-cols-[120px_1fr] items-center gap-3 py-1.5"
         >
           <div className="flex items-center gap-1.5">
             <Skeleton className="size-3.5 rounded-sm" />
@@ -84,9 +84,9 @@ function MainContentSkeleton() {
       <div className="flex gap-1 self-start rounded-md bg-muted p-1">
         {Array.from({ length: 4 }).map((_, index) => (
           <Skeleton
+            className="h-7 w-24 rounded"
             // biome-ignore lint/suspicious/noArrayIndexKey: stable tab count
             key={index}
-            className="h-7 w-24 rounded"
           />
         ))}
       </div>
@@ -96,9 +96,9 @@ function MainContentSkeleton() {
       <ol className="flex flex-col">
         {Array.from({ length: 5 }).map((_, index) => (
           <li
+            className="relative flex gap-3 pb-5"
             // biome-ignore lint/suspicious/noArrayIndexKey: stable skeleton count
             key={index}
-            className="relative flex gap-3 pb-5"
           >
             {index === 4 ? null : (
               <span

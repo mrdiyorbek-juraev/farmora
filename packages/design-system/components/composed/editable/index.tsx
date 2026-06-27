@@ -3,14 +3,14 @@
 import { useAsRef } from "@repo/design-system/hooks/use-as-ref";
 import { useIsomorphicLayoutEffect } from "@repo/design-system/hooks/use-isomorphic-layout-effect";
 import { useLazyRef } from "@repo/design-system/hooks/use-lazy-ref";
-import { useComposedRefs } from "@repo/design-system/lib/compose-refs";
+import { useComposedRefs } from "@repo/design-system/lib/compose-refs"; 
 import { cn } from "@repo/design-system/lib/utils";
 import {
   Direction as DirectionPrimitive,
   Slot as SlotPrimitive,
 } from "radix-ui";
 import * as React from "react";
-import { VisuallyHiddenInput } from "../../dice-ui/visually-hidden-input";
+import { VisuallyHiddenInput } from "../../ui/visually-hidden-input";
 
 const ROOT_NAME = "Editable";
 const LABEL_NAME = "EditableLabel";

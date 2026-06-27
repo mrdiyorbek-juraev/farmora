@@ -26,11 +26,8 @@ import { cn } from "@repo/design-system/lib/utils";
 import { Grid2x2 } from "lucide-react";
 
 import type { Breed } from "@/models/cattle";
-import {
-  type AgeBucket,
-  ageBucketLabels,
-  type BreedAgeCount,
-} from "@/models/dashboard";
+import { type AgeBucket, ageBucketLabels } from "@/models/dashboard";
+import type { HerdLeaderboardProps } from "@/types/main/dashboard";
 
 const bucketOrder: AgeBucket[] = ["calf", "young", "adult", "mature"];
 
@@ -48,10 +45,6 @@ const breedLabels: Record<Breed, string> = {
 
 const numberFormatter = new Intl.NumberFormat();
 const ROW_LIMIT = 8;
-
-export type HerdLeaderboardProps = {
-  data: BreedAgeCount[];
-};
 
 export function HerdLeaderboard({ data }: HerdLeaderboardProps) {
   // Aggregate breed totals so we can rank rows by herd size, then

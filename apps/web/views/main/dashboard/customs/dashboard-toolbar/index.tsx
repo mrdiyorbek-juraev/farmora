@@ -3,13 +3,9 @@
 import { Button } from "@repo/design-system/components/ui/button";
 import { Plus } from "lucide-react";
 
-import { type DashboardDateRange, DateRangePicker } from "../date-range-picker";
+import type { DashboardToolbarProps } from "@/types/main/dashboard";
 
-export type DashboardToolbarProps = {
-  range: DashboardDateRange;
-  onRangeChange: (next: DashboardDateRange) => void;
-  onAddNew: () => void;
-};
+import { DateRangePicker } from "../date-range-picker";
 
 export function DashboardToolbar({
   range,

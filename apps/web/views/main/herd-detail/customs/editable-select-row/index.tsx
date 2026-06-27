@@ -11,21 +11,7 @@ import {
 import { cn } from "@repo/design-system/lib/utils";
 import { ChevronsUpDown } from "lucide-react";
 
-export type EditableSelectOption = {
-  value: string;
-  label: string;
-};
-
-export type EditableSelectRowProps = {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-  options: EditableSelectOption[];
-  placeholder?: string;
-  /** Render the current value as anything (Badge, plain text, etc.). */
-  renderValue?: (value: string) => React.ReactNode;
-  onSave: (next: string) => void | Promise<unknown>;
-};
+import type { EditableSelectRowProps } from "@/types/main/herd-detail";
 
 export function EditableSelectRow({
   icon,
@@ -76,16 +62,13 @@ export function EditableSelectRow({
               <ChevronsUpDown className="size-3 shrink-0 text-muted-foreground" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="min-w-(--radix-dropdown-menu-trigger-width)">
-            <DropdownMenuRadioGroup
-              onValueChange={handleChange}
-              value={value}
-            >
+          <DropdownMenuContent
+            align="start"
+            className="min-w-(--radix-dropdown-menu-trigger-width)"
+          >
+            <DropdownMenuRadioGroup onValueChange={handleChange} value={value}>
               {options.map((option) => (
-                <DropdownMenuRadioItem
-                  key={option.value}
-                  value={option.value}
-                >
+                <DropdownMenuRadioItem key={option.value} value={option.value}>
                   {option.label}
                 </DropdownMenuRadioItem>
               ))}

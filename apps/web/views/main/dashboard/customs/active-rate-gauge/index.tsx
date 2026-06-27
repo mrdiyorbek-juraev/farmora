@@ -10,12 +10,9 @@ import {
 } from "@repo/design-system/components/ui/card";
 import { Activity } from "lucide-react";
 
-import { nivoTheme } from "../nivo-theme";
+import type { ActiveRateGaugeProps } from "@/types/main/dashboard";
 
-export type ActiveRateGaugeProps = {
-  active: number;
-  total: number;
-};
+import { nivoTheme } from "../nivo-theme";
 
 export function ActiveRateGauge({ active, total }: ActiveRateGaugeProps) {
   const pct = total === 0 ? 0 : Math.round((active / total) * 100);

@@ -16,7 +16,7 @@ function describeCattle(row: { tag_number: string; name: string | null }) {
   return row.name ? `${row.name} (#${row.tag_number})` : `#${row.tag_number}`;
 }
 
-export class CattleQueryError extends Error {
+class CattleQueryError extends Error {
   constructor(cause?: unknown) {
     super("Failed to query cattle.");
     this.name = "CattleQueryError";
@@ -24,14 +24,14 @@ export class CattleQueryError extends Error {
   }
 }
 
-export class CattleNotFoundError extends Error {
+class CattleNotFoundError extends Error {
   constructor(id: string) {
     super(`Cattle ${id} not found.`);
     this.name = "CattleNotFoundError";
   }
 }
 
-export class CattleDuplicateTagError extends Error {
+class CattleDuplicateTagError extends Error {
   constructor(tag: string) {
     super(`Tag number "${tag}" already exists for this organization.`);
     this.name = "CattleDuplicateTagError";
@@ -168,6 +168,67 @@ export async function createCattle(
   });
 
   return data;
+}
+
+export async function isCattleTagAvailable(
+  organizationId: string,
+  tagNumber: string,
+  excludeId?: string
+): Promise<boolean> {
+  const db = createAdminClient();
+
+  let query = db
+    .from("cattle")
+    .select("id", { count: "exact", head: true })
+    .eq("organization_id", organizationId)
+    .eq("tag_number", tagNumber);
+
+  if (excludeId) {
+    query = query.neq("id", excludeId);
+  }
+
+  const { count, error } = await query;
+
+  if (error) {
+    throw new CattleQueryError(error);
+  }
+
+  return (count ?? 0) === 0;
+}
+
+// USDA AIN-style: 15 digits = "840" country prefix + 12-digit unique animal
+// id. We mimic the visual format (`840-XXX-XXXX-XXXX`) but the suffix is a
+// per-org running sequence, not a registered AIN. Only this function ever
+// produces 840-prefixed tags, so the lookup below is the source of truth
+// for "next" — farmer-typed tags in other formats are ignored entirely.
+export async function generateCattleTag(
+  organizationId: string
+): Promise<string> {
+  const db = createAdminClient();
+
+  const { data, error } = await db
+    .from("cattle")
+    .select("tag_number")
+    .eq("organization_id", organizationId)
+    .like("tag_number", "840-%");
+
+  if (error) {
+    throw new CattleQueryError(error);
+  }
+
+  let max = 0;
+  for (const { tag_number } of data ?? []) {
+    const digits = tag_number.replaceAll("-", "");
+    if (digits.length === 15 && digits.startsWith("840")) {
+      const n = Number(digits.slice(3));
+      if (Number.isFinite(n) && n > max) {
+        max = n;
+      }
+    }
+  }
+
+  const next = String(max + 1).padStart(12, "0");
+  return `840-${next.slice(0, 3)}-${next.slice(3, 7)}-${next.slice(7, 12)}`;
 }
 
 export async function updateCattle(

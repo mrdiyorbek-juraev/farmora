@@ -8,8 +8,6 @@ import {
 } from "@repo/design-system/components/ui/card";
 
 import { useCattleDetail } from "@/services/cattle";
-import { AnimalFormModal } from "@/views/main/herd/modals/create-animal-modal";
-
 import { AnimalHeader } from "./customs/animal-header";
 import { AnimalMainContent } from "./customs/animal-main-content";
 import { AnimalRecordDetails } from "./customs/animal-record-details";
@@ -49,11 +47,10 @@ export function HerdDetailView({ id }: { id: string }) {
         <div className="min-w-0 border-border p-4 lg:border-r">
           <AnimalRecordDetails animal={animal} />
         </div>
-         <div className="min-w-0 p-4">
+        <div className="min-w-0 py-4">
           <AnimalMainContent animal={animal} />
         </div>
       </div>
-      <AnimalFormModal />
     </div>
   );
 }

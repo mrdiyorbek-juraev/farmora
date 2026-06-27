@@ -5,19 +5,15 @@ import { differenceInCalendarDays, format, subDays } from "date-fns";
 import { AlertTriangle, Baby, Heart } from "lucide-react";
 import { useMemo, useState } from "react";
 
-import type {
-  DashboardMetricsRange,
-  HeadlineCounts,
-} from "@/models/dashboard";
+import type { DashboardMetricsRange, HeadlineCounts } from "@/models/dashboard";
 import { useDashboardMetrics } from "@/services/dashboard";
 import { useGlobalModal } from "@/stores/shared/modal-store";
+import type { DashboardDateRange } from "@/types/main/dashboard";
 
-import { AnimalFormModal } from "../herd/modals/create-animal-modal";
 import { ActiveRateGauge } from "./customs/active-rate-gauge";
 import { AgeDistribution } from "./customs/age-distribution";
 import { BreedComposition } from "./customs/breed-composition";
 import { DashboardToolbar } from "./customs/dashboard-toolbar";
-import type { DashboardDateRange } from "./customs/date-range-picker";
 import { GenderRatio } from "./customs/gender-ratio";
 import { HerdLeaderboard } from "./customs/herd-leaderboard";
 import { MetricCard } from "./customs/metric-card";
@@ -48,7 +44,6 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
     </h2>
   );
 }
-
 
 function buildDelta(
   current: number,
@@ -84,7 +79,6 @@ export function DashboardView() {
         <div className="min-h-0 flex-1 overflow-y-auto">
           <DashboardSkeleton />
         </div>
-        <AnimalFormModal />
       </div>
     );
   }
@@ -102,7 +96,6 @@ export function DashboardView() {
             {metrics.error?.message ?? "Failed to load dashboard metrics."}
           </div>
         </div>
-        <AnimalFormModal />
       </div>
     );
   }
@@ -194,7 +187,10 @@ export function DashboardView() {
               label="Active herd size"
               value={data.activeHerdSize}
             />
-            <ActiveRateGauge active={data.activeHerdSize} total={data.totalCount} />
+            <ActiveRateGauge
+              active={data.activeHerdSize}
+              total={data.totalCount}
+            />
           </div>
         </div>
 
@@ -220,8 +216,6 @@ export function DashboardView() {
           <HerdLeaderboard data={data.byBreedAge} />
         </div>
       </div>
-
-      <AnimalFormModal />
     </div>
   );
 }

@@ -3,8 +3,8 @@
 import {
   createContext,
   type ReactNode,
+  use,
   useCallback,
-  useContext,
   useMemo,
   useState,
 } from "react";
@@ -35,7 +35,7 @@ export function AskAiProvider({ children }: { children: ReactNode }) {
 }
 
 export function useAskAi() {
-  const ctx = useContext(AskAiContext);
+  const ctx = use(AskAiContext);
   if (!ctx) {
     throw new Error("useAskAi must be used inside AskAiProvider");
   }

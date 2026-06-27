@@ -18,7 +18,6 @@ import {
   ClipboardEdit,
   PackagePlus,
   PencilLine,
-  Stethoscope,
   StickyNote,
   Trash2,
   UserMinus,
@@ -29,6 +28,7 @@ import {
 import type { ActivityRow, ActivityType } from "@/models/activity";
 import type { Status } from "@/models/cattle";
 import { useCattleActivity } from "@/services/activity";
+import type { ActivityLogProps } from "@/types/main/herd-detail";
 
 const statusLabels: Record<Status, string> = {
   active: "Active",
@@ -128,17 +128,14 @@ function parseStatusMeta(
     return null;
   }
   const meta = metadata as Record<string, unknown>;
-  const from = typeof meta.from === "string" ? (meta.from as Status) : undefined;
+  const from =
+    typeof meta.from === "string" ? (meta.from as Status) : undefined;
   const to = typeof meta.to === "string" ? (meta.to as Status) : undefined;
   if (!(from || to)) {
     return null;
   }
   return { from, to };
 }
-
-export type ActivityLogProps = {
-  cattleId: string;
-};
 
 export function ActivityLog({ cattleId }: ActivityLogProps) {
   const { activity } = useCattleActivity(cattleId);
@@ -241,10 +238,7 @@ function ActivityRowItem({ event, isLast }: ActivityRowItemProps) {
           <div className="flex flex-wrap items-center gap-2">
             {statusMeta.from ? (
               <Badge
-                className={cn(
-                  "rounded-full",
-                  statusToneClass[statusMeta.from]
-                )}
+                className={cn("rounded-full", statusToneClass[statusMeta.from])}
                 variant="outline"
               >
                 {statusLabels[statusMeta.from]}
@@ -281,9 +275,9 @@ function ActivityLogSkeleton() {
     <ol className="relative flex flex-col">
       {Array.from({ length: 4 }).map((_, index) => (
         <li
+          className="relative flex gap-3 pb-5"
           // biome-ignore lint/suspicious/noArrayIndexKey: stable skeleton count
           key={index}
-          className="relative flex gap-3 pb-5"
         >
           {index === 3 ? null : (
             <span

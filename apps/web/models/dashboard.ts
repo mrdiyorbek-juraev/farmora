@@ -21,7 +21,7 @@ export const ageBucketLabels: Record<AgeBucket, string> = {
 //   Young  6 mo – 1 yr
 //   Adult  1 – 5 yr
 //   Mature 5+ yr
-export function bucketForAgeMonths(months: number): AgeBucket {
+function bucketForAgeMonths(months: number): AgeBucket {
   if (months < 6) {
     return "calf";
   }
