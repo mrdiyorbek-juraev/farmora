@@ -29,7 +29,7 @@ export function Providers({ children }: Props) {
               </ConfirmDialogProvider>
             </NuqsAdapter>
           </HotkeysProvider>
-          <ReactQueryDevtools />
+          {process.env.NODE_ENV === "development" && <ReactQueryDevtools />}
         </QueryClientProvider>
       </AuthProvider>
     </DesignSystemProvider>

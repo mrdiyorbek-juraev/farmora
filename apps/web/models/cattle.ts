@@ -1,12 +1,6 @@
 import { z } from "zod";
 
-const statusEnum = z.enum([
-  "active",
-  "sick",
-  "pregnant",
-  "sold",
-  "deceased",
-]);
+const statusEnum = z.enum(["active", "sick", "pregnant", "sold", "deceased"]);
 
 const genderEnum = z.enum(["female", "male"]);
 
@@ -77,7 +71,7 @@ export const listCattleFiltersSchema = z.object({
   status: statusEnum.optional(),
   breed: breedEnum.optional(),
   gender: genderEnum.optional(),
-  search: z.string().trim().min(1).optional(),
+  search: z.string().trim().min(1).max(200).optional(),
   sort: cattleSortColumnEnum.optional(),
   direction: sortDirectionEnum.optional(),
   limit: z.number().int().positive().max(200).default(50),
@@ -145,11 +139,9 @@ const WEIGHT_MAX = 9999.99;
 // Rejects leading `.5`, negatives, exponents, thousand separators.
 const WEIGHT_NUMERIC = /^\d+(?:\.\d{1,2})?$/;
 
-const optionalDate = z
-  .string()
-  .refine((v) => v === "" || ISO_DATE.test(v), {
-    message: "Use the date picker (YYYY-MM-DD).",
-  });
+const optionalDate = z.string().refine((v) => v === "" || ISO_DATE.test(v), {
+  message: "Use the date picker (YYYY-MM-DD).",
+});
 
 const requiredDate = z
   .string()

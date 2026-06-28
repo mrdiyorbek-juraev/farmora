@@ -3,15 +3,14 @@
 import { ResponsiveLine } from "@nivo/line";
 import { format, isValid, parseISO } from "date-fns";
 
-import { formatLb, kgToLb } from "@/lib/utils/weight";
+import { formatKg } from "@/lib/utils/weight";
 import type { CattleWithHistory } from "@/models/cattle";
 import type { WeightMeasurementWithGain } from "@/models/weight";
 
 import { nivoTheme } from "../../../dashboard/customs/nivo-theme";
 
 const MS_PER_DAY = 1000 * 60 * 60 * 24;
-// Age checkpoints (in days) surfaced under the chart, mirroring the
-// "Weight (lb 200/400/600 days)" growth markers in the design.
+// Age checkpoints (in days) surfaced under the chart as growth markers.
 const AGE_MARKERS = [200, 400, 600] as const;
 
 interface WeightChartProps {
@@ -51,7 +50,7 @@ export function WeightChart({ animal, series }: WeightChartProps) {
   const points = series
     .map((point) => ({
       x: point.measured_at,
-      y: Number(kgToLb(point.weight_kg).toFixed(3)),
+      y: point.weight_kg,
     }))
     .filter((point) => {
       const parsed = parseISO(point.x);
@@ -106,9 +105,9 @@ export function WeightChart({ animal, series }: WeightChartProps) {
               </span>
               <span className="font-medium tabular-nums">
                 {Number(point.data.y).toLocaleString(undefined, {
-                  maximumFractionDigits: 3,
+                  maximumFractionDigits: 2,
                 })}{" "}
-                lb
+                kg
               </span>
             </div>
           )}
@@ -125,12 +124,12 @@ export function WeightChart({ animal, series }: WeightChartProps) {
       </div>
 
       <dl className="mt-4 grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-4">
-        <Marker label="Current weight (lb)" value={formatLb(currentKg)} />
+        <Marker label="Current weight (kg)" value={formatKg(currentKg)} />
         {AGE_MARKERS.map((age) => (
           <Marker
             key={age}
-            label={`Weight (lb ${age} days)`}
-            value={dobValid ? formatLb(weightAtAge(dob, series, age)) : "—"}
+            label={`Weight (kg ${age} days)`}
+            value={dobValid ? formatKg(weightAtAge(dob, series, age)) : "—"}
           />
         ))}
       </dl>

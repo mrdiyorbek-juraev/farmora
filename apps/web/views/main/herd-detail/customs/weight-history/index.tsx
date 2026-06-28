@@ -23,7 +23,9 @@ export function WeightHistory({ animal }: { animal: CattleWithHistory }) {
   const { setModal } = useGlobalModal();
 
   const openRecordModal = () =>
-    setModal({ weightForm: { open: true, cattleId: animal.id } });
+    setModal({
+      weightForm: { open: true, cattleId: animal.id, editing: null },
+    });
 
   if (weightHistory.isPending) {
     return (

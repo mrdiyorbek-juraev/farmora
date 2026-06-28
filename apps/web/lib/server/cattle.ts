@@ -25,9 +25,14 @@ class CattleQueryError extends Error {
 }
 
 class CattleNotFoundError extends Error {
+  // Keep the id for server-side logs, but the user-facing message omits
+  // it — leaking internal UUIDs in a toast is needless information
+  // disclosure (and the id means nothing to a farmer).
+  readonly cattleId: string;
   constructor(id: string) {
-    super(`Cattle ${id} not found.`);
+    super("This animal no longer exists.");
     this.name = "CattleNotFoundError";
+    this.cattleId = id;
   }
 }
 
@@ -40,6 +45,23 @@ class CattleDuplicateTagError extends Error {
 
 const PG_UNIQUE_VIOLATION = "23505";
 
+// Neutralize characters that have structural meaning inside a PostgREST
+// filter expression before interpolating a user-supplied term into an
+// `.or()` string. Commas separate OR clauses; parentheses open/close
+// groups; backslash, percent and underscore are LIKE metacharacters. We
+// strip the structural ones and escape the LIKE wildcards so the term can
+// only ever match literally — it can never inject extra filter clauses.
+function escapePostgrestLikeTerm(raw: string): string {
+  return raw
+    .replaceAll("\\", "")
+    .replaceAll(",", " ")
+    .replaceAll("(", " ")
+    .replaceAll(")", " ")
+    .replaceAll("*", " ")
+    .replaceAll("%", " ")
+    .replaceAll("_", " ");
+}
+
 export async function listCattle(
   organizationId: string,
   rawFilters: ListCattleFilters = {}
@@ -48,9 +70,7 @@ export async function listCattle(
   const db = createAdminClient();
 
   const sortColumn = filters.sort ?? "created_at";
-  const ascending = filters.direction
-    ? filters.direction === "asc"
-    : false;
+  const ascending = filters.direction ? filters.direction === "asc" : false;
 
   let query = db
     .from("cattle")
@@ -74,7 +94,7 @@ export async function listCattle(
     query = query.eq("gender", filters.gender);
   }
   if (filters.search) {
-    const term = filters.search.replaceAll(",", " ");
+    const term = escapePostgrestLikeTerm(filters.search);
     query = query.or(`tag_number.ilike.%${term}%,name.ilike.%${term}%`);
   }
 
@@ -111,9 +131,7 @@ export async function getCattleById(
   }
 
   const history = (data.status_history ?? []).slice().sort((a, b) => {
-    return (
-      new Date(b.changed_at).getTime() - new Date(a.changed_at).getTime()
-    );
+    return new Date(b.changed_at).getTime() - new Date(a.changed_at).getTime();
   });
 
   return { ...data, status_history: history };
@@ -150,6 +168,24 @@ export async function createCattle(
       throw new CattleDuplicateTagError(input.tag_number);
     }
     throw new CattleQueryError(error);
+  }
+
+  // Seed the weight history with the creation weight so it's the first
+  // point on the chart and the denormalized cattle.weight_kg cache is
+  // backed by a real measurement. Dated today (the registration date).
+  if (input.weight_kg != null) {
+    const measuredAt = new Date().toISOString().slice(0, 10);
+    const seed = await db.from("weight_measurements").insert({
+      organization_id: organizationId,
+      cattle_id: data.id,
+      recorded_by_user_id: createdByUserId,
+      weight_kg: input.weight_kg,
+      measured_at: measuredAt,
+      is_initial: true,
+    });
+    if (seed.error) {
+      throw new CattleQueryError(seed.error);
+    }
   }
 
   await recordActivity({
@@ -206,11 +242,17 @@ export async function generateCattleTag(
 ): Promise<string> {
   const db = createAdminClient();
 
+  // Bound the scan: newest tags first so the running max is in this
+  // window, and cap the payload so a large herd can't make tag
+  // generation linearly slower over time. A per-org sequence is the
+  // O(1) long-term fix if herds outgrow this.
   const { data, error } = await db
     .from("cattle")
     .select("tag_number")
     .eq("organization_id", organizationId)
-    .like("tag_number", "840-%");
+    .like("tag_number", "840-%")
+    .order("created_at", { ascending: false })
+    .limit(1000);
 
   if (error) {
     throw new CattleQueryError(error);
@@ -274,8 +316,7 @@ export async function updateCattle(
     throw new CattleQueryError(error);
   }
 
-  const statusChanged =
-    Boolean(patch.status) && patch.status !== before.status;
+  const statusChanged = Boolean(patch.status) && patch.status !== before.status;
 
   if (statusChanged && patch.status) {
     const history = await db.from("status_history").insert({

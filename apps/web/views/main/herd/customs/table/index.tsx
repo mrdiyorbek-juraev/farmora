@@ -2,8 +2,15 @@
 
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@repo/design-system/components/ui/empty";
 import { format, isValid, parseISO } from "date-fns";
-import { Plus } from "lucide-react";
+import { AlertCircle, Plus } from "lucide-react";
 import Link from "next/link";
 import { useMemo } from "react";
 
@@ -252,7 +259,6 @@ export function HerdTable() {
       .map((column) => allColumnDefs[column.id])
       .filter((def): def is ColDef<CattleRow> => Boolean(def));
 
-  
     const withHeader = visible.map((def) => {
       if (def.field !== "tag_number") {
         return def;
@@ -273,6 +279,26 @@ export function HerdTable() {
       return { ...rest, flex: 1, minWidth: rest.minWidth ?? 160 };
     });
   }, [columns, handleAddNew]);
+
+  if (cattle.isError) {
+    return (
+      <div className="p-4">
+        <Empty className="border">
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <AlertCircle />
+            </EmptyMedia>
+            <EmptyTitle>Couldn&rsquo;t load the herd</EmptyTitle>
+            <EmptyDescription>
+              {cattle.error instanceof Error
+                ? cattle.error.message
+                : "Something went wrong loading your animals. Try again."}
+            </EmptyDescription>
+          </EmptyHeader>
+        </Empty>
+      </div>
+    );
+  }
 
   return (
     <DataTable

@@ -2,6 +2,7 @@
 
 import { create, type StateCreator } from "zustand";
 import type { CattleWithHistory } from "@/models/cattle";
+import type { WeightMeasurementRow } from "@/models/weight";
 
 // ─── Global Modal ────────────────────────────────────────────────────────────
 interface GlobalModal {
@@ -16,6 +17,8 @@ interface GlobalModal {
   weightForm: {
     open: boolean;
     cattleId: string | null;
+    // The measurement being edited, or null when recording a new one.
+    editing: WeightMeasurementRow | null;
   };
 }
 
@@ -30,6 +33,7 @@ export const initialGlobalModal: Omit<GlobalModal, "setModal"> = {
   weightForm: {
     open: false,
     cattleId: null,
+    editing: null,
   },
 };
 

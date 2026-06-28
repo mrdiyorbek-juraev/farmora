@@ -1,23 +1,17 @@
-// Weight is stored in kilograms (matching cattle.weight_kg) but the herd
-// detail UI presents pounds, so all kg→lb conversion lives here.
-
-const KG_TO_LB = 2.204_622_62;
-
-/** Convert kilograms to pounds. */
-export function kgToLb(kg: number): number {
-  return kg * KG_TO_LB;
-}
+// Weight is stored and displayed in kilograms (matching cattle.weight_kg
+// and the weight_measurements table). Formatting lives here so every
+// weight surface renders consistently.
 
 /**
- * Format a kg value as pounds with up to 3 decimals, matching the
- * weight-history table/chart (e.g. "881.848"). Returns "—" for nullish.
+ * Format a kg value with up to 2 decimals (e.g. "620", "430.5").
+ * Returns "—" for nullish input.
  */
-export function formatLb(kg: number | null | undefined): string {
+export function formatKg(kg: number | null | undefined): string {
   if (kg == null) {
     return "—";
   }
-  return kgToLb(kg).toLocaleString(undefined, {
+  return kg.toLocaleString(undefined, {
     minimumFractionDigits: 0,
-    maximumFractionDigits: 3,
+    maximumFractionDigits: 2,
   });
 }

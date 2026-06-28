@@ -4,6 +4,7 @@ import { createAdminClient } from "@repo/database/admin";
 import type { WeightMeasurementInsert } from "@repo/database/types";
 import type {
   RecordWeightInput,
+  UpdateWeightInput,
   WeightMeasurementRow,
   WeightMeasurementWithGain,
 } from "@/models/weight";
@@ -25,16 +26,29 @@ class WeightQueryError extends Error {
 }
 
 class WeightCattleNotFoundError extends Error {
+  readonly cattleId: string;
   constructor(id: string) {
-    super(`Cattle ${id} not found.`);
+    super("This animal no longer exists.");
     this.name = "WeightCattleNotFoundError";
+    this.cattleId = id;
   }
 }
 
 class WeightNotFoundError extends Error {
+  readonly weightId: string;
   constructor(id: string) {
-    super(`Weight measurement ${id} not found.`);
+    super("This weight measurement no longer exists.");
     this.name = "WeightNotFoundError";
+    this.weightId = id;
+  }
+}
+
+class WeightInitialDeleteError extends Error {
+  constructor() {
+    super(
+      "The initial weight can't be deleted — edit it instead, or it would leave the animal with no starting weight."
+    );
+    this.name = "WeightInitialDeleteError";
   }
 }
 
@@ -202,6 +216,55 @@ export async function recordWeight(
 }
 
 /**
+ * Edit an existing weight measurement (e.g. to correct a mistyped value)
+ * and re-sync the animal's current weight, since the change may alter
+ * which measurement is newest or the newest value itself.
+ */
+export async function updateWeight(
+  organizationId: string,
+  input: UpdateWeightInput
+): Promise<WeightMeasurementRow> {
+  const db = createAdminClient();
+
+  // Org-scoped read doubles as the tenancy check and gives us the
+  // cattle_id whose current-weight cache must be recomputed.
+  const existing = await db
+    .from("weight_measurements")
+    .select("cattle_id")
+    .eq("organization_id", organizationId)
+    .eq("id", input.id)
+    .maybeSingle();
+
+  if (existing.error) {
+    throw new WeightQueryError(existing.error);
+  }
+  if (!existing.data) {
+    throw new WeightNotFoundError(input.id);
+  }
+  const cattleId = existing.data.cattle_id;
+
+  const { data, error } = await db
+    .from("weight_measurements")
+    .update({
+      weight_kg: input.weight_kg,
+      measured_at: input.measured_at,
+      note: input.note ?? null,
+    })
+    .eq("organization_id", organizationId)
+    .eq("id", input.id)
+    .select("*")
+    .single();
+
+  if (error) {
+    throw new WeightQueryError(error);
+  }
+
+  await syncCurrentWeight(db, organizationId, cattleId);
+
+  return data;
+}
+
+/**
  * Delete a single weight measurement and re-sync the animal's current
  * weight from whatever remains (null if it was the last one).
  */
@@ -215,7 +278,7 @@ export async function deleteWeight(
   // the org-scoped read doubles as the tenancy check before deleting.
   const existing = await db
     .from("weight_measurements")
-    .select("cattle_id")
+    .select("cattle_id, is_initial")
     .eq("organization_id", organizationId)
     .eq("id", id)
     .maybeSingle();
@@ -225,6 +288,11 @@ export async function deleteWeight(
   }
   if (!existing.data) {
     throw new WeightNotFoundError(id);
+  }
+  // The creation weigh-in anchors the chart and the current-weight cache —
+  // it can be corrected (update) but never removed.
+  if (existing.data.is_initial) {
+    throw new WeightInitialDeleteError();
   }
   const cattleId = existing.data.cattle_id;
 

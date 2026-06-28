@@ -1,10 +1,24 @@
 "use client";
 
 import { Badge } from "@repo/design-system/components/ui/badge";
+import { Button } from "@repo/design-system/components/ui/button";
 import { format, isValid, parseISO } from "date-fns";
-import { Calendar, Tag, Users, Weight } from "lucide-react";
+import {
+  Cake,
+  CalendarCheck,
+  Clock,
+  Dna,
+  Handshake,
+  HeartPulse,
+  PawPrint,
+  Plus,
+  Tag,
+  VenusAndMars,
+  Weight,
+} from "lucide-react";
 import { useCallback } from "react";
 
+import { formatKg } from "@/lib/utils/weight";
 import type {
   Acquisition,
   Breed,
@@ -13,6 +27,7 @@ import type {
   UpdateCattleInput,
 } from "@/models/cattle";
 import { useCattleMutations } from "@/services/cattle/mutations";
+import { useGlobalModal } from "@/stores/shared/modal-store";
 import type { AnimalRecordDetailsProps } from "@/types/main/herd-detail";
 
 import { EditableDateRow } from "../editable-date-row";
@@ -60,10 +75,6 @@ const statusVariant: Record<
   deceased: "outline",
 };
 
-const numberFormatter = new Intl.NumberFormat(undefined, {
-  maximumFractionDigits: 2,
-});
-
 function formatDateTime(value: string | null | undefined) {
   if (!value) {
     return "—";
@@ -77,6 +88,12 @@ function formatDateTime(value: string | null | undefined) {
 
 export function AnimalRecordDetails({ animal }: AnimalRecordDetailsProps) {
   const { onUpdate } = useCattleMutations();
+  const setModal = useGlobalModal((state) => state.setModal);
+
+  const openRecordWeight = () =>
+    setModal({
+      weightForm: { open: true, cattleId: animal.id, editing: null },
+    });
 
   const handleSave = useCallback(
     <K extends keyof UpdateCattleInput>(
@@ -107,7 +124,7 @@ export function AnimalRecordDetails({ animal }: AnimalRecordDetailsProps) {
         value={animal.tag_number}
       />
       <EditableTextRow
-        icon={<Tag className="size-3.5" />}
+        icon={<PawPrint className="size-3.5" />}
         label="Name"
         maxLength={120}
         onSave={(next) => handleSave("name", next.length > 0 ? next : null)}
@@ -115,7 +132,7 @@ export function AnimalRecordDetails({ animal }: AnimalRecordDetailsProps) {
         value={animal.name ?? ""}
       />
       <EditableSelectRow
-        icon={<Tag className="size-3.5" />}
+        icon={<Dna className="size-3.5" />}
         label="Breed"
         onSave={(next) => handleSave("breed", next as Breed)}
         options={breedOptions}
@@ -128,7 +145,7 @@ export function AnimalRecordDetails({ animal }: AnimalRecordDetailsProps) {
         value={animal.breed}
       />
       <EditableSelectRow
-        icon={<Users className="size-3.5" />}
+        icon={<VenusAndMars className="size-3.5" />}
         label="Gender"
         onSave={(next) => handleSave("gender", next as Gender)}
         options={genderOptions}
@@ -141,7 +158,7 @@ export function AnimalRecordDetails({ animal }: AnimalRecordDetailsProps) {
         value={animal.gender}
       />
       <EditableSelectRow
-        icon={<Tag className="size-3.5" />}
+        icon={<HeartPulse className="size-3.5" />}
         label="Status"
         onSave={(next) => handleSave("status", next as Status)}
         options={statusOptions}
@@ -158,35 +175,41 @@ export function AnimalRecordDetails({ animal }: AnimalRecordDetailsProps) {
       />
       <EditableDateRow
         disableFuture
-        icon={<Calendar className="size-3.5" />}
+        icon={<Cake className="size-3.5" />}
         label="Date of birth"
         onSave={(next) => handleSave("date_of_birth", next ?? "")}
         placeholder="Pick birth date"
         value={animal.date_of_birth}
       />
-      <EditableTextRow
+      {/* Weight is read-only here — it's the latest weigh-in, owned by the */}
+      {/* Weight history tab. Editing it directly would be overwritten the */}
+      {/* next time a measurement is recorded, so we record one instead. */}
+      <ReadOnlyTextRow
         icon={<Weight className="size-3.5" />}
         label="Weight"
-        onSave={(next) => {
-          if (next === "") {
-            return handleSave("weight_kg", null);
-          }
-          const parsed = Number(next);
-          if (Number.isNaN(parsed) || parsed <= 0) {
-            return handleSave("weight_kg", parsed);
-          }
-          return handleSave("weight_kg", parsed);
-        }}
-        placeholder="450"
         tabular
         value={
-          animal.weight_kg == null
-            ? ""
-            : numberFormatter.format(animal.weight_kg)
+          <div className="flex items-center justify-between gap-2">
+            <span className="font-medium tabular-nums">
+              {animal.weight_kg == null
+                ? "—"
+                : `${formatKg(animal.weight_kg)} kg`}
+            </span>
+            <Button
+              className="h-6 px-2 text-xs"
+              onClick={openRecordWeight}
+              size="sm"
+              type="button"
+              variant="ghost"
+            >
+              <Plus className="size-3" />
+              Record
+            </Button>
+          </div>
         }
       />
       <EditableSelectRow
-        icon={<Tag className="size-3.5" />}
+        icon={<Handshake className="size-3.5" />}
         label="Acquisition"
         onSave={(next) => handleSave("acquisition", next as Acquisition)}
         options={acquisitionOptions}
@@ -200,14 +223,14 @@ export function AnimalRecordDetails({ animal }: AnimalRecordDetailsProps) {
       />
       <EditableDateRow
         disableFuture
-        icon={<Calendar className="size-3.5" />}
+        icon={<CalendarCheck className="size-3.5" />}
         label="Acquired"
         onSave={(next) => handleSave("acquired_date", next)}
         placeholder="Pick acquired date"
         value={animal.acquired_date}
       />
       <ReadOnlyTextRow
-        icon={<Calendar className="size-3.5" />}
+        icon={<Clock className="size-3.5" />}
         label="Last updated"
         tabular
         value={formatDateTime(animal.updated_at)}

@@ -14,6 +14,8 @@ export const weightMeasurementSchema = z.object({
   weight_kg: z.number(),
   measured_at: z.string(),
   note: z.string().nullable(),
+  // The creation weigh-in — editable but not deletable.
+  is_initial: z.boolean(),
   created_at: z.string(),
 });
 
@@ -28,6 +30,13 @@ export const recordWeightInputSchema = z.object({
 
 export const listWeightHistoryInputSchema = z.object({
   cattle_id: z.uuid(),
+});
+
+export const updateWeightInputSchema = z.object({
+  id: z.uuid(),
+  weight_kg: z.number().positive().max(9999.99),
+  measured_at: z.iso.date(),
+  note: z.string().trim().max(2000).optional().nullable(),
 });
 
 export const deleteWeightInputSchema = z.object({
@@ -99,6 +108,33 @@ export function weightFormToRecordInput(
   };
 }
 
+/**
+ * Load a persisted measurement back into the form-values shape so the
+ * modal can pre-fill every field when editing a weigh-in.
+ */
+export function weightToFormValues(
+  row: WeightMeasurementRow
+): WeightFormValues {
+  return {
+    weight_kg: String(row.weight_kg),
+    measured_at: row.measured_at,
+    note: row.note ?? "",
+  };
+}
+
+export function weightFormToUpdateInput(
+  id: string,
+  values: z.infer<typeof weightFormSchema>
+): UpdateWeightInput {
+  const note = values.note.trim();
+  return {
+    id,
+    weight_kg: Number(values.weight_kg),
+    measured_at: values.measured_at,
+    note: note === "" ? null : note,
+  };
+}
+
 // ─── Types ──────────────────────────────────────────────────────────
 
 export type WeightMeasurementRow = z.infer<typeof weightMeasurementSchema>;
@@ -111,6 +147,7 @@ export type WeightMeasurementWithGain = WeightMeasurementRow & {
 };
 
 export type RecordWeightInput = z.infer<typeof recordWeightInputSchema>;
+export type UpdateWeightInput = z.infer<typeof updateWeightInputSchema>;
 export type ListWeightHistoryInput = z.infer<
   typeof listWeightHistoryInputSchema
 >;

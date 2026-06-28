@@ -21,11 +21,12 @@ import {
   TableRow,
 } from "@repo/design-system/components/ui/table";
 import { format, isValid, parseISO } from "date-fns";
-import { Trash2 } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 
-import { formatLb } from "@/lib/utils/weight";
+import { formatKg } from "@/lib/utils/weight";
 import type { WeightMeasurementWithGain } from "@/models/weight";
 import { useWeightMutations } from "@/services/weight/mutations";
+import { useGlobalModal } from "@/stores/shared/modal-store";
 
 interface WeightHistoryTableProps {
   cattleId: string;
@@ -43,9 +44,13 @@ export function WeightHistoryTable({
   series,
 }: WeightHistoryTableProps) {
   const { onDelete } = useWeightMutations(cattleId);
+  const setModal = useGlobalModal((state) => state.setModal);
   // Newest-first for the log, while the chart consumes the same series
   // oldest-first. Spread first so the source array stays untouched.
   const rows = [...series].reverse();
+
+  const editMeasurement = (row: WeightMeasurementWithGain) =>
+    setModal({ weightForm: { open: true, cattleId, editing: row } });
 
   return (
     <section className="rounded-md border border-border">
@@ -56,10 +61,10 @@ export function WeightHistoryTable({
         <TableHeader>
           <TableRow>
             <TableHead>Activity date</TableHead>
-            <TableHead className="text-right">Weight (lb)</TableHead>
-            <TableHead className="text-right">Avg. daily gain (lb)</TableHead>
+            <TableHead className="text-right">Weight (kg)</TableHead>
+            <TableHead className="text-right">Avg. daily gain (kg)</TableHead>
             <TableHead>Notes</TableHead>
-            <TableHead className="w-12 text-right">Action</TableHead>
+            <TableHead className="w-20 text-right">Action</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -67,46 +72,67 @@ export function WeightHistoryTable({
             <TableRow key={row.id}>
               <TableCell className="tabular-nums">
                 {formatDate(row.measured_at)}
+                {row.is_initial ? (
+                  <span className="ml-2 text-muted-foreground text-xs">
+                    (initial)
+                  </span>
+                ) : null}
               </TableCell>
               <TableCell className="text-right tabular-nums">
-                {formatLb(row.weight_kg)}
+                {formatKg(row.weight_kg)}
               </TableCell>
               <TableCell className="text-right tabular-nums">
-                {formatLb(row.average_daily_gain_kg)}
+                {formatKg(row.average_daily_gain_kg)}
               </TableCell>
               <TableCell className="max-w-48 truncate text-muted-foreground">
                 {row.note ?? "—"}
               </TableCell>
               <TableCell className="text-right">
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button
-                      aria-label="Delete measurement"
-                      size="icon"
-                      variant="ghost"
-                    >
-                      <Trash2 className="text-destructive" />
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Delete measurement?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        This removes the {formatDate(row.measured_at)} weigh-in
-                        ({formatLb(row.weight_kg)} lb). This can&rsquo;t be
-                        undone.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction
-                        onClick={() => onDelete.mutate({ id: row.id })}
-                      >
-                        Delete
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
+                <div className="flex items-center justify-end gap-0.5">
+                  <Button
+                    aria-label="Edit measurement"
+                    onClick={() => editMeasurement(row)}
+                    size="icon"
+                    variant="ghost"
+                  >
+                    <Pencil />
+                  </Button>
+                  {/* The initial (creation) weigh-in can't be deleted — only */}
+                  {/* corrected — so the chart always keeps a starting point. */}
+                  {row.is_initial ? null : (
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          aria-label="Delete measurement"
+                          size="icon"
+                          variant="ghost"
+                        >
+                          <Trash2 className="text-destructive" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>
+                            Delete measurement?
+                          </AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This removes the {formatDate(row.measured_at)}{" "}
+                            weigh-in ({formatKg(row.weight_kg)} kg). This
+                            can&rsquo;t be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => onDelete.mutate({ id: row.id })}
+                          >
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  )}
+                </div>
               </TableCell>
             </TableRow>
           ))}

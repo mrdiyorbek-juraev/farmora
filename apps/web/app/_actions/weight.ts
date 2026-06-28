@@ -9,6 +9,7 @@ import {
   deleteWeight,
   listWeightHistory,
   recordWeight,
+  updateWeight,
 } from "@/lib/server/weight";
 import {
   type DeleteWeightInput,
@@ -17,6 +18,8 @@ import {
   listWeightHistoryInputSchema,
   type RecordWeightInput,
   recordWeightInputSchema,
+  type UpdateWeightInput,
+  updateWeightInputSchema,
 } from "@/models/weight";
 
 export async function listWeightHistoryAction(
@@ -39,6 +42,16 @@ export async function recordWeightAction(rawInput: RecordWeightInput) {
   const input = recordWeightInputSchema.parse(rawInput);
   const { organization, userId } = await getCurrentOrganization();
   return recordWeight(organization.id, userId, input);
+}
+
+export async function updateWeightAction(rawInput: UpdateWeightInput) {
+  const { userId } = await auth();
+  if (!userId) {
+    throw new OrgUnauthenticatedError();
+  }
+  const input = updateWeightInputSchema.parse(rawInput);
+  const { organization } = await getCurrentOrganization();
+  return updateWeight(organization.id, input);
 }
 
 export async function deleteWeightAction(rawInput: DeleteWeightInput) {

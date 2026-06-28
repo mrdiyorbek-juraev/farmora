@@ -36,6 +36,8 @@ import {
   weightFormInitialValues,
   weightFormSchema,
   weightFormToRecordInput,
+  weightFormToUpdateInput,
+  weightToFormValues,
 } from "@/models/weight";
 import { useWeightMutations } from "@/services/weight/mutations";
 import { useGlobalModal } from "@/stores/shared/modal-store";
@@ -133,22 +135,38 @@ function DateField({
 export function RecordWeightModal() {
   const { weightForm, setModal } = useGlobalModal();
   const cattleId = weightForm.cattleId ?? "";
-  const { onRecord } = useWeightMutations(cattleId);
+  const editing = weightForm.editing;
+  const isEdit = Boolean(editing);
+  const { onRecord, onUpdate } = useWeightMutations(cattleId);
 
-  const close = () => setModal({ weightForm: { open: false, cattleId: null } });
+  const close = () =>
+    setModal({ weightForm: { open: false, cattleId: null, editing: null } });
+
+  const initialValues = editing
+    ? weightToFormValues(editing)
+    : weightFormInitialValues;
 
   const handleSubmit = async (
     values: WeightFormValues,
     helpers: FormikHelpers<WeightFormValues>
   ) => {
     const parsed = weightFormSchema.safeParse(values);
-    if (!(parsed.success && cattleId)) {
+    if (!parsed.success) {
       return;
     }
     try {
-      await onRecord.mutateAsync(
-        weightFormToRecordInput(cattleId, parsed.data)
-      );
+      if (editing) {
+        await onUpdate.mutateAsync(
+          weightFormToUpdateInput(editing.id, parsed.data)
+        );
+      } else {
+        if (!cattleId) {
+          return;
+        }
+        await onRecord.mutateAsync(
+          weightFormToRecordInput(cattleId, parsed.data)
+        );
+      }
       helpers.resetForm({ values: weightFormInitialValues });
       close();
     } catch {
@@ -167,15 +185,17 @@ export function RecordWeightModal() {
     >
       <DialogContent className="w-[min(95vw,480px)] max-w-[min(95vw,480px)] sm:max-w-[min(95vw,480px)]">
         <DialogHeader>
-          <DialogTitle>Record weight</DialogTitle>
+          <DialogTitle>{isEdit ? "Edit weight" : "Record weight"}</DialogTitle>
           <DialogDescription>
-            Log a new weigh-in. Enter the weight in kilograms — the history
-            shows it in pounds.
+            {isEdit
+              ? "Correct this weigh-in. Weight is in kilograms."
+              : "Log a new weigh-in. Weight is in kilograms."}
           </DialogDescription>
         </DialogHeader>
 
         <Formik<WeightFormValues>
-          initialValues={weightFormInitialValues}
+          enableReinitialize
+          initialValues={initialValues}
           onSubmit={handleSubmit}
           validate={validate}
           validateOnBlur
@@ -246,7 +266,7 @@ export function RecordWeightModal() {
                   Cancel
                 </Button>
                 <Button disabled={isSubmitting || !isValid} type="submit">
-                  Record weight
+                  {isEdit ? "Save changes" : "Record weight"}
                 </Button>
               </DialogFooter>
             </Form>

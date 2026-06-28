@@ -55,7 +55,9 @@ export type RecordActivityInput = {
  * effort — we log on failure but do not throw, because losing an audit
  * row should never roll back the underlying mutation it describes.
  */
-export async function recordActivity(input: RecordActivityInput): Promise<void> {
+export async function recordActivity(
+  input: RecordActivityInput
+): Promise<void> {
   const db = createAdminClient();
   const row: ActivityInsert = {
     organization_id: input.organizationId,
@@ -69,8 +71,13 @@ export async function recordActivity(input: RecordActivityInput): Promise<void> 
 
   const { error } = await db.from("activities").insert(row);
   if (error) {
-    // eslint-disable-next-line no-console
-    console.error("[activity] failed to record", { type: input.type, error });
+    // Best-effort log only — never throw (see doc above). Log the code +
+    // message rather than the raw Supabase error object so we don't spill
+    // query internals / hints into the server logs.
+    console.error("[activity] failed to record", {
+      type: input.type,
+      code: error.code,
+      message: error.message,
+    });
   }
 }
-

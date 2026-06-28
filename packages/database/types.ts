@@ -45,6 +45,7 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[];
 
+// biome-ignore lint/style/useConsistentTypeDefinitions: mirrors the `supabase gen types` output, which emits a type alias.
 export type Database = {
   public: {
     Tables: {
@@ -219,6 +220,7 @@ export type Database = {
           weight_kg: number;
           measured_at: string;
           note: string | null;
+          is_initial: boolean;
           created_at: string;
         };
         Insert: {
@@ -229,6 +231,7 @@ export type Database = {
           weight_kg: number;
           measured_at: string;
           note?: string | null;
+          is_initial?: boolean;
           created_at?: string;
         };
         Update: {
@@ -239,6 +242,7 @@ export type Database = {
           weight_kg?: number;
           measured_at?: string;
           note?: string | null;
+          is_initial?: boolean;
           created_at?: string;
         };
         Relationships: [
@@ -320,8 +324,7 @@ export type Database = {
   };
 };
 
-export type Organization =
-  Database["public"]["Tables"]["organizations"]["Row"];
+export type Organization = Database["public"]["Tables"]["organizations"]["Row"];
 export type Membership = Database["public"]["Tables"]["memberships"]["Row"];
 export type Cattle = Database["public"]["Tables"]["cattle"]["Row"];
 export type StatusHistory =

@@ -4,8 +4,16 @@ import { useOrganization } from "@repo/auth/client";
 import { toast } from "@repo/design-system/components/ui/sonner";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { deleteWeightAction, recordWeightAction } from "@/app/_actions/weight";
-import type { DeleteWeightInput, RecordWeightInput } from "@/models/weight";
+import {
+  deleteWeightAction,
+  recordWeightAction,
+  updateWeightAction,
+} from "@/app/_actions/weight";
+import type {
+  DeleteWeightInput,
+  RecordWeightInput,
+  UpdateWeightInput,
+} from "@/models/weight";
 
 import { activityKeys } from "../activity/keys";
 import { cattleKeys } from "../cattle/keys";
@@ -63,6 +71,26 @@ export const useWeightMutations = (cattleId: string) => {
     },
   });
 
+  // ── Update ──────────────────────────────────────────────────────
+
+  const onUpdate = useMutation({
+    mutationFn: (values: UpdateWeightInput) => updateWeightAction(values),
+    onMutate: () => {
+      const toastId = toast.loading("Updating weight...");
+      return { toastId };
+    },
+    onSuccess: (_data, _variables, context) => {
+      toast.success("Weight updated.", { id: context?.toastId as ToastId });
+      invalidateScope();
+    },
+    onError: (error, _variables, context) => {
+      toast.error("Failed to update weight.", {
+        description: extractMessage(error),
+        id: context?.toastId as ToastId,
+      });
+    },
+  });
+
   // ── Delete ──────────────────────────────────────────────────────
 
   const onDelete = useMutation({
@@ -85,5 +113,5 @@ export const useWeightMutations = (cattleId: string) => {
     },
   });
 
-  return { onRecord, onDelete };
+  return { onRecord, onUpdate, onDelete };
 };

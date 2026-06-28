@@ -81,12 +81,18 @@ async function upsertOrganization(
     organizationId: clerkOrgId,
   });
 
+  // Upsert (not insert) so two concurrent first-requests for the same
+  // org can't collide on the clerk_org_id unique constraint — the loser
+  // of the race updates the just-inserted row instead of throwing 23505.
   const inserted = await db
     .from("organizations")
-    .insert({
-      clerk_org_id: clerkOrgId,
-      name: clerkOrg.name,
-    })
+    .upsert(
+      {
+        clerk_org_id: clerkOrgId,
+        name: clerkOrg.name,
+      },
+      { onConflict: "clerk_org_id" }
+    )
     .select("*")
     .single();
 
@@ -131,14 +137,19 @@ async function upsertMembership(
   const fullName =
     [user.firstName, user.lastName].filter(Boolean).join(" ") || null;
 
+  // Upsert on the (clerk_user_id, organization_id) unique constraint so
+  // concurrent first-requests resolve instead of colliding on 23505.
   const inserted = await db
     .from("memberships")
-    .insert({
-      organization_id: args.organizationId,
-      clerk_user_id: args.clerkUserId,
-      email,
-      full_name: fullName,
-    })
+    .upsert(
+      {
+        organization_id: args.organizationId,
+        clerk_user_id: args.clerkUserId,
+        email,
+        full_name: fullName,
+      },
+      { onConflict: "clerk_user_id,organization_id" }
+    )
     .select("*")
     .single();
 

@@ -5,6 +5,7 @@ import {
   parseISO,
   subDays,
 } from "date-fns";
+import { z } from "zod";
 import type { Acquisition, Breed, Gender, Status } from "./cattle";
 
 export type AgeBucket = "calf" | "young" | "adult" | "mature";
@@ -69,12 +70,18 @@ export type AcquisitionCount = { acquisition: Acquisition; count: number };
 export type AgeBucketCount = { bucket: AgeBucket; count: number };
 export type BreedAgeCount = { breed: Breed; bucket: AgeBucket; count: number };
 
-export type DashboardMetricsRange = {
-  /** Inclusive lower bound, ISO date string (YYYY-MM-DD). */
-  from?: string;
-  /** Inclusive upper bound, ISO date string (YYYY-MM-DD). */
-  to?: string;
-};
+export const dashboardMetricsRangeSchema = z
+  .object({
+    /** Inclusive lower bound, ISO date string (YYYY-MM-DD). */
+    from: z.iso.date().optional(),
+    /** Inclusive upper bound, ISO date string (YYYY-MM-DD). */
+    to: z.iso.date().optional(),
+  })
+  .optional();
+
+export type DashboardMetricsRange = NonNullable<
+  z.infer<typeof dashboardMetricsRangeSchema>
+>;
 
 // The three headline counts a farmer acts on. We carry the prior
 // window's values so the cards can show period-over-period change —
